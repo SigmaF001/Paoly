@@ -66,6 +66,13 @@ class AppStrings {
   String get errorBadAmount  => _isThai ? 'จำนวนเงินไม่ถูกต้อง' : 'Invalid amount';
   String get selectAccount   => _isThai ? 'เลือกบัญชี' : 'Select Account';
 
+  String get scanSlip        => _isThai ? 'สแกนสลิป' : 'Scan Slip';
+  String get scanning        => _isThai ? 'กำลังประมวลผล...' : 'Processing...';
+  String get scanError       => _isThai ? 'ไม่สามารถอ่านสลิปได้' : 'Could not read slip';
+  String get selectPhotoSource => _isThai ? 'เลือกแหล่งที่มาของรูป' : 'Select Image Source';
+  String get camera          => _isThai ? 'กล้อง' : 'Camera';
+  String get gallery         => _isThai ? 'แกลเลอรี' : 'Gallery';
+
   String get addCategoryTitle     => _isThai ? 'เพิ่มหมวดหมู่' : 'Add Category';
   String get editCategoryTitle    => _isThai ? 'แก้ไขหมวดหมู่' : 'Edit Category';
   String get categoryNameHint     => _isThai ? 'ชื่อ (ภาษาไทย)' : 'Name (Thai)';

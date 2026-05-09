@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../data/app_settings.dart';
 import '../data/finance_data.dart';
 import '../l10n/app_strings.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
+import '../services/slip_scanner_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
 import 'emoji_picker_grid.dart';
@@ -36,6 +38,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   DateTime _selectedDate = DateTime.now();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+  final _scanner = SlipScannerService();
+  bool _isScanning = false;
 
   bool get _isThai => widget.settings.langCode == 'th';
 
@@ -56,7 +60,65 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _scanner.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanSlip() async {
+    final strings = AppStrings.of(widget.settings.langCode);
+    final ImagePicker picker = ImagePicker();
+    
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(strings.camera, style: GoogleFonts.notoSansThai()),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(strings.gallery, style: GoogleFonts.notoSansThai()),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final XFile? image = await picker.pickImage(source: source);
+    if (image == null) return;
+
+    setState(() => _isScanning = true);
+
+    try {
+      final slipData = await _scanner.processImage(image.path);
+      
+      setState(() {
+        _isExpense = true; // Slips are usually expenses
+        if (slipData.amount != null) {
+          _amountController.text = slipData.amount!.toStringAsFixed(2);
+        }
+        if (slipData.date != null) {
+          _selectedDate = slipData.date!;
+        }
+        if (slipData.receiver != null) {
+          _titleController.text = slipData.receiver!;
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(strings.scanError)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isScanning = false);
+    }
   }
 
   void _save() {
@@ -309,36 +371,59 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom +
             MediaQuery.of(context).viewPadding.bottom,
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+      child: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              strings.addTransaction,
-              style: GoogleFonts.notoSansThai(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      strings.addTransaction,
+                      style: GoogleFonts.notoSansThai(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _isScanning ? null : _scanSlip,
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightPurple,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.document_scanner_outlined,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      tooltip: strings.scanSlip,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
             // Type toggle
             Container(
               height: 44,
@@ -581,7 +666,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _save,
+                onPressed: _isScanning ? null : _save,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -603,7 +688,35 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           ],
         ),
       ),
-    );
+      if (_isScanning)
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Center(
+
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    strings.scanning,
+                    style: GoogleFonts.notoSansThai(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+    ],
+  ),
+);
   }
 
   Widget _buildTypeBtn(String label, bool isExpense) {
