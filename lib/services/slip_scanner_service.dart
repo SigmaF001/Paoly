@@ -1,4 +1,5 @@
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 
 class SlipData {
   final double? amount;
@@ -16,33 +17,87 @@ class SlipData {
 
 class SlipScannerService {
   final _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.qrCode]);
 
   Future<SlipData> processImage(String imagePath) async {
     final inputImage = InputImage.fromFilePath(imagePath);
-    final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
     
+    // Try QR first
+    double? qrAmount;
+    DateTime? qrDate;
+    String? qrReceiver;
+    
+    final barcodes = await _barcodeScanner.processImage(inputImage);
+    for (var barcode in barcodes) {
+      if (barcode.format == BarcodeFormat.qrCode && barcode.displayValue != null) {
+        final parsed = _parseQR(barcode.displayValue!);
+        if (parsed != null) {
+          qrAmount = parsed.amount;
+          qrDate = parsed.date;
+          qrReceiver = parsed.receiver;
+          break;
+        }
+      }
+    }
+
+    final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
     String fullText = recognizedText.text;
     
     return SlipData(
-      amount: _extractAmount(fullText),
-      date: _extractDate(fullText),
-      receiver: _extractReceiver(fullText),
+      amount: qrAmount ?? _extractAmount(fullText),
+      date: qrDate ?? _extractDate(fullText),
+      receiver: qrReceiver ?? _extractReceiver(fullText),
       rawText: fullText,
     );
   }
 
+  // Thai QR / EMVCo Slip Verification Parser (Mini QR)
+  SlipData? _parseQR(String raw) {
+    if (!raw.startsWith('000201')) return null;
+
+    double? amount;
+    DateTime? date;
+    String? receiver;
+
+    try {
+      int i = 0;
+      while (i < raw.length) {
+        if (i + 4 > raw.length) break;
+        String tag = raw.substring(i, i + 2);
+        int length = int.parse(raw.substring(i + 2, i + 4));
+        if (i + 4 + length > raw.length) break;
+        String value = raw.substring(i + 4, i + 4 + length);
+        
+        if (tag == '54') {
+          amount = double.tryParse(value);
+        } else if (tag == '00') {
+          // Payload Format Indicator
+        } else if (tag == '51' || tag == '30' || tag == '31') {
+          // Merchant Account Information - often contains bank/receiver info
+          // Tag 30/31 subtag 01 often has account/name info in some implementations
+        }
+        
+        i += 4 + length;
+      }
+    } catch (e) {
+      // Parsing error
+    }
+
+    if (amount != null) {
+      return SlipData(amount: amount, date: date, receiver: receiver, rawText: raw);
+    }
+    return null;
+  }
+
   double? _extractAmount(String text) {
     // Regex for matching amounts like 1,234.56 or 1234.56
-    // We look for patterns near keywords like "จำนวนเงิน", "Amount", "บาท", "THB"
     final amountRegExp = RegExp(r'(\d{1,3}(,\d{3})*(\.\d{2})?)');
     
-    // Some slips use "บาท" or "THB" after the amount
-    // Some use "Amount" or "จำนวนเงิน" before
     final lines = text.split('\n');
     double? detectedAmount;
 
     for (var line in lines) {
-      if (line.contains(RegExp(r'จำนวนเงิน|Amount|Total|Net|ยอดเงิน', caseSensitive: false))) {
+      if (line.contains(RegExp(r'จำนวนเงิน|Amount|Total|Net|ยอดเงิน|เงินโอน', caseSensitive: false))) {
         final match = amountRegExp.firstMatch(line);
         if (match != null) {
           detectedAmount = double.tryParse(match.group(0)!.replaceAll(',', ''));
@@ -51,13 +106,12 @@ class SlipScannerService {
       }
     }
 
-    // Fallback: search the whole text if not found near keywords
+    // Fallback: search the whole text
     if (detectedAmount == null) {
       final matches = amountRegExp.allMatches(text);
       for (var match in matches) {
         final val = double.tryParse(match.group(0)!.replaceAll(',', ''));
         if (val != null && val > 0) {
-          // In many slips, the largest amount is the transfer amount
           if (detectedAmount == null || val > detectedAmount) {
             detectedAmount = val;
           }
@@ -97,10 +151,9 @@ class SlipScannerService {
   }
 
   String? _extractReceiver(String text) {
-    // This is very bank-specific, but we can look for "To:" or "ถึง"
     final lines = text.split('\n');
     for (int i = 0; i < lines.length; i++) {
-      if (lines[i].contains(RegExp(r'To|ถึง|ผู้รับ', caseSensitive: false))) {
+      if (lines[i].contains(RegExp(r'To|ถึง|ผู้รับ|ไปยัง', caseSensitive: false))) {
         if (i + 1 < lines.length) {
           return lines[i+1].trim();
         }
@@ -130,5 +183,6 @@ class SlipScannerService {
 
   void dispose() {
     _textRecognizer.close();
+    _barcodeScanner.close();
   }
 }
