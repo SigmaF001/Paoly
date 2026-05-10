@@ -82,6 +82,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     super.dispose();
   }
 
+  String _formatAmount(double v) {
+    final s = v.toStringAsFixed(2);
+    return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
+  }
+
   Future<void> _scanSlip() async {
     final strings = AppStrings.of(widget.settings.langCode);
     final ImagePicker picker = ImagePicker();
@@ -118,8 +123,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
       setState(() {
         _isExpense = true; // Slips are usually expenses
+        final expenseCats = _categoriesForType(true);
+        _selectedCategoryId =
+            expenseCats.isNotEmpty ? expenseCats.first.id : null;
         if (slipData.amount != null) {
-          _amountController.text = slipData.amount!.toStringAsFixed(2);
+          _amountController.text = _formatAmount(slipData.amount!);
         }
         if (slipData.date != null) {
           _selectedDate = slipData.date!;
