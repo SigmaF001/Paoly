@@ -28,13 +28,9 @@ class EmojiPickerGrid extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? AppColors.primary : AppColors.lightPurple,
               borderRadius: BorderRadius.circular(12),
-              border: isSelected
-                  ? null
-                  : Border.all(color: AppColors.border),
+              border: isSelected ? null : Border.all(color: AppColors.border),
             ),
-            child: Center(
-              child: Text(e, style: const TextStyle(fontSize: 22)),
-            ),
+            child: Center(child: Text(e, style: const TextStyle(fontSize: 22))),
           ),
         );
       }).toList(),

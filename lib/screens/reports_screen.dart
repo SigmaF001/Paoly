@@ -10,11 +10,7 @@ import '../widgets/year_month_selector.dart';
 class ReportsScreen extends StatelessWidget {
   final FinanceData data;
   final AppSettings settings;
-  const ReportsScreen({
-    super.key,
-    required this.data,
-    required this.settings,
-  });
+  const ReportsScreen({super.key, required this.data, required this.settings});
 
   static const _cardShadow = BoxShadow(
     color: Color(0x1F7C6FC4),
@@ -29,19 +25,18 @@ class ReportsScreen extends StatelessWidget {
       builder: (context, _) {
         final strings = AppStrings.of(settings.langCode);
         final categoryTotals = <String, Map<String, dynamic>>{};
-        for (final t
-            in data.filteredTransactions.where((t) => t.isExpense)) {
+        for (final t in data.filteredTransactions.where((t) => t.isExpense)) {
           categoryTotals.putIfAbsent(
             t.category,
             () => {'icon': t.icon, 'name': t.category, 'total': 0.0},
           );
           categoryTotals[t.category]!['total'] =
-              (categoryTotals[t.category]!['total'] as double) +
-                  t.amount;
+              (categoryTotals[t.category]!['total'] as double) + t.amount;
         }
         final categories = categoryTotals.values.toList()
-          ..sort((a, b) =>
-              (b['total'] as double).compareTo(a['total'] as double));
+          ..sort(
+            (a, b) => (b['total'] as double).compareTo(a['total'] as double),
+          );
         final maxExpense = categories.isEmpty
             ? 1.0
             : (categories.first['total'] as double);
@@ -66,13 +61,21 @@ class ReportsScreen extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _summaryCard(strings.incomeSummary,
-                        data.monthlyIncome, AppColors.income, '↑'),
+                    child: _summaryCard(
+                      strings.incomeSummary,
+                      data.monthlyIncome,
+                      AppColors.income,
+                      '↑',
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _summaryCard(strings.expenseSummary,
-                        data.monthlyExpense, AppColors.expense, '↓'),
+                    child: _summaryCard(
+                      strings.expenseSummary,
+                      data.monthlyExpense,
+                      AppColors.expense,
+                      '↓',
+                    ),
                   ),
                 ],
               ),
@@ -95,7 +98,8 @@ class ReportsScreen extends StatelessWidget {
                     child: Text(
                       strings.noExpenses,
                       style: GoogleFonts.notoSansThai(
-                          color: AppColors.textMuted),
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 )
@@ -109,8 +113,7 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _summaryCard(
-      String label, double amount, Color color, String arrow) {
+  Widget _summaryCard(String label, double amount, Color color, String arrow) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -124,7 +127,10 @@ class ReportsScreen extends StatelessWidget {
           Text(
             '$arrow  $label',
             style: GoogleFonts.notoSansThai(
-                fontSize: 12, color: color, fontWeight: FontWeight.w500),
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -156,7 +162,9 @@ class ReportsScreen extends StatelessWidget {
           Text(
             strings.netCashFlow,
             style: GoogleFonts.notoSansThai(
-                fontSize: 12, color: AppColors.lightPurple),
+              fontSize: 12,
+              color: AppColors.lightPurple,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -192,8 +200,10 @@ class ReportsScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(cat['icon'] as String,
-                      style: const TextStyle(fontSize: 18)),
+                  Text(
+                    cat['icon'] as String,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     cat['name'] as String,
@@ -222,7 +232,8 @@ class ReportsScreen extends StatelessWidget {
               value: ratio,
               backgroundColor: AppColors.lightPurple,
               valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary),
+                AppColors.primary,
+              ),
               minHeight: 6,
             ),
           ),

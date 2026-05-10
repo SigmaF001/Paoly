@@ -32,9 +32,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedNavIndex = 0;
 
   // maps nav positions to IndexedStack page index (skip position 2)
-  int get _pageIndex => _selectedNavIndex > 2
-      ? _selectedNavIndex - 1
-      : _selectedNavIndex;
+  int get _pageIndex =>
+      _selectedNavIndex > 2 ? _selectedNavIndex - 1 : _selectedNavIndex;
 
   void _onNavTap(int i) {
     if (i == 2) {
@@ -67,7 +66,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onNavigate: (i) => setState(() => _selectedNavIndex = i),
                   ),
                   TransactionsScreen(
-                      data: widget.data, settings: widget.settings),
+                    data: widget.data,
+                    settings: widget.settings,
+                  ),
                   ReportsScreen(data: widget.data, settings: widget.settings),
                   AccountsScreen(data: widget.data, settings: widget.settings),
                 ],
@@ -156,17 +157,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(item['icon'] as String,
-                      style: const TextStyle(fontSize: 20)),
+                  Text(
+                    item['icon'] as String,
+                    style: const TextStyle(fontSize: 20),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     item['label'] as String,
                     style: GoogleFonts.notoSansThai(
                       fontSize: 10,
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.normal,
-                      color:
-                          selected ? AppColors.primary : AppColors.textMuted,
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: selected ? AppColors.primary : AppColors.textMuted,
                     ),
                   ),
                 ],
@@ -257,7 +260,9 @@ class _HomeTabState extends State<_HomeTab> {
             Text(
               strings.greeting(widget.settings.userName),
               style: GoogleFonts.notoSansThai(
-                  fontSize: 13, color: AppColors.textMuted),
+                fontSize: 13,
+                color: AppColors.textMuted,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
@@ -276,8 +281,10 @@ class _HomeTabState extends State<_HomeTab> {
             GestureDetector(
               onTap: () => widget.settings.toggleLanguage(),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(12),
@@ -297,9 +304,10 @@ class _HomeTabState extends State<_HomeTab> {
             GestureDetector(
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(strings.noNotification,
-                      style:
-                          GoogleFonts.notoSansThai(color: Colors.white)),
+                  content: Text(
+                    strings.noNotification,
+                    style: GoogleFonts.notoSansThai(color: Colors.white),
+                  ),
                   duration: const Duration(seconds: 2),
                   backgroundColor: AppColors.primaryDark,
                 ),
@@ -313,7 +321,8 @@ class _HomeTabState extends State<_HomeTab> {
                   boxShadow: [_cardShadow],
                 ),
                 child: const Center(
-                    child: Text('🔔', style: TextStyle(fontSize: 16))),
+                  child: Text('🔔', style: TextStyle(fontSize: 16)),
+                ),
               ),
             ),
           ],
@@ -363,7 +372,9 @@ class _HomeTabState extends State<_HomeTab> {
               Text(
                 strings.monthlyBalance,
                 style: GoogleFonts.notoSansThai(
-                    fontSize: 12, color: const Color(0xFFEFE9FF)),
+                  fontSize: 12,
+                  color: const Color(0xFFEFE9FF),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -379,11 +390,13 @@ class _HomeTabState extends State<_HomeTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _balanceSubCard(
-                      strings.incomeLabel,
-                      formatCurrency(widget.data.monthlyIncome)),
+                    strings.incomeLabel,
+                    formatCurrency(widget.data.monthlyIncome),
+                  ),
                   _balanceSubCard(
-                      strings.expenseLabel,
-                      formatCurrency(widget.data.monthlyExpense)),
+                    strings.expenseLabel,
+                    formatCurrency(widget.data.monthlyExpense),
+                  ),
                 ],
               ),
             ],
@@ -404,23 +417,32 @@ class _HomeTabState extends State<_HomeTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: GoogleFonts.notoSansThai(
-                  fontSize: 11, color: const Color(0xFFEFE9FF))),
+          Text(
+            label,
+            style: GoogleFonts.notoSansThai(
+              fontSize: 11,
+              color: const Color(0xFFEFE9FF),
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(amount,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              )),
+          Text(
+            amount,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title,
-      {required VoidCallback onViewAll, required AppStrings strings}) {
+  Widget _buildSectionHeader(
+    String title, {
+    required VoidCallback onViewAll,
+    required AppStrings strings,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -437,7 +459,9 @@ class _HomeTabState extends State<_HomeTab> {
           child: Text(
             strings.viewAll,
             style: GoogleFonts.notoSansThai(
-                fontSize: 13, color: AppColors.primary),
+              fontSize: 13,
+              color: AppColors.primary,
+            ),
           ),
         ),
       ],
@@ -470,7 +494,9 @@ class _HomeTabState extends State<_HomeTab> {
                     Text(
                       a.name,
                       style: GoogleFonts.notoSansThai(
-                          fontSize: 10, color: AppColors.textMuted),
+                        fontSize: 10,
+                        color: AppColors.textMuted,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
@@ -530,7 +556,8 @@ class _HomeTabState extends State<_HomeTab> {
               shape: BoxShape.circle,
             ),
             child: Center(
-                child: Text(t.icon, style: const TextStyle(fontSize: 18))),
+              child: Text(t.icon, style: const TextStyle(fontSize: 18)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -547,10 +574,11 @@ class _HomeTabState extends State<_HomeTab> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  formatDate(t.date,
-                      langCode: widget.settings.langCode),
+                  formatDate(t.date, langCode: widget.settings.langCode),
                   style: GoogleFonts.notoSansThai(
-                      fontSize: 11, color: AppColors.textMuted),
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ],
             ),

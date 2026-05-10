@@ -33,7 +33,11 @@ class YearMonthSelector extends StatelessWidget {
               onTap: () => data.setYear(year - 1),
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Icon(Icons.chevron_left, color: AppColors.primary, size: 22),
+                child: Icon(
+                  Icons.chevron_left,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
               ),
             ),
             Text(
@@ -48,7 +52,11 @@ class YearMonthSelector extends StatelessWidget {
               onTap: () => data.setYear(year + 1),
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Icon(Icons.chevron_right, color: AppColors.primary, size: 22),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
               ),
             ),
           ],
@@ -79,8 +87,9 @@ class YearMonthSelector extends StatelessWidget {
                     months[index],
                     style: GoogleFonts.notoSansThai(
                       fontSize: 13,
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                       color: selected ? Colors.white : AppColors.textMuted,
                     ),
                   ),

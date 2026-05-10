@@ -67,7 +67,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: YearMonthSelector(
-                  data: widget.data, settings: widget.settings),
+                data: widget.data,
+                settings: widget.settings,
+              ),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -89,8 +91,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('📭',
-                              style: TextStyle(fontSize: 48)),
+                          const Text('📭', style: TextStyle(fontSize: 48)),
                           const SizedBox(height: 8),
                           Text(
                             strings.noTransactions,
@@ -103,11 +104,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: list.length,
-                      itemBuilder: (_, i) =>
-                          _dismissibleItem(list[i], strings),
+                      itemBuilder: (_, i) => _dismissibleItem(list[i], strings),
                     ),
             ),
           ],
@@ -121,8 +120,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return GestureDetector(
       onTap: () => setState(() => _filter = value),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -153,8 +151,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           color: AppColors.expense,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: const Icon(Icons.delete_outline,
-            color: Colors.white, size: 22),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 22),
       ),
       child: _transactionItem(t, strings),
     );
@@ -163,8 +160,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget _transactionItem(Transaction t, AppStrings strings) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -180,8 +176,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(t.icon,
-                  style: const TextStyle(fontSize: 18)),
+              child: Text(t.icon, style: const TextStyle(fontSize: 18)),
             ),
           ),
           const SizedBox(width: 12),
@@ -199,8 +194,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  formatDate(t.date,
-                      langCode: widget.settings.langCode),
+                  formatDate(t.date, langCode: widget.settings.langCode),
                   style: GoogleFonts.notoSansThai(
                     fontSize: 11,
                     color: AppColors.textMuted,

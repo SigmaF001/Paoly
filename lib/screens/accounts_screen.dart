@@ -10,18 +10,28 @@ import '../utils/sounds.dart';
 import '../widgets/emoji_picker_grid.dart';
 
 const List<String> _accountEmojis = [
-  '🏦', '💳', '💰', '🪙', '💵', '🏧', '🛒', '🏡',
-  '✈️', '🎯', '📱', '🎮', '🍽️', '🚗', '💊', '📚',
+  '🏦',
+  '💳',
+  '💰',
+  '🪙',
+  '💵',
+  '🏧',
+  '🛒',
+  '🏡',
+  '✈️',
+  '🎯',
+  '📱',
+  '🎮',
+  '🍽️',
+  '🚗',
+  '💊',
+  '📚',
 ];
 
 class AccountsScreen extends StatelessWidget {
   final FinanceData data;
   final AppSettings settings;
-  const AccountsScreen({
-    super.key,
-    required this.data,
-    required this.settings,
-  });
+  const AccountsScreen({super.key, required this.data, required this.settings});
 
   static const _cardShadow = BoxShadow(
     color: Color(0x1F7C6FC4),
@@ -52,8 +62,7 @@ class AccountsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _totalCard(strings),
               const SizedBox(height: 20),
-              ...data.accounts
-                  .map((a) => _accountCard(a, context, strings)),
+              ...data.accounts.map((a) => _accountCard(a, context, strings)),
               const SizedBox(height: 8),
               _addAccountButton(context, strings),
               const SizedBox(height: 16),
@@ -79,7 +88,9 @@ class AccountsScreen extends StatelessWidget {
           Text(
             strings.totalAllAccounts,
             style: GoogleFonts.notoSansThai(
-                fontSize: 13, color: AppColors.lightPurple),
+              fontSize: 13,
+              color: AppColors.lightPurple,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -94,15 +105,16 @@ class AccountsScreen extends StatelessWidget {
           Text(
             strings.accountCount(data.accounts.length),
             style: GoogleFonts.notoSansThai(
-                fontSize: 12, color: AppColors.lightPurple),
+              fontSize: 12,
+              color: AppColors.lightPurple,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _accountCard(
-      Account a, BuildContext context, AppStrings strings) {
+  Widget _accountCard(Account a, BuildContext context, AppStrings strings) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -125,8 +137,7 @@ class AccountsScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(a.icon,
-                      style: const TextStyle(fontSize: 22)),
+                  child: Text(a.icon, style: const TextStyle(fontSize: 22)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -154,8 +165,11 @@ class AccountsScreen extends StatelessWidget {
                   AppSounds.playSoftClick();
                   _showEditDialog(context, strings, a);
                 },
-                child: const Icon(Icons.edit_outlined,
-                    size: 18, color: AppColors.textMuted),
+                child: const Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: AppColors.textMuted,
+                ),
               ),
             ],
           ),
@@ -199,26 +213,29 @@ class AccountsScreen extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(
             strings.addAccountTitle,
-            style:
-                GoogleFonts.notoSansThai(fontWeight: FontWeight.bold),
+            style: GoogleFonts.notoSansThai(fontWeight: FontWeight.bold),
           ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(strings.selectEmoji,
-                    style: GoogleFonts.notoSansThai(
-                        fontSize: 12, color: AppColors.textMuted)),
+                Text(
+                  strings.selectEmoji,
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 EmojiPickerGrid(
                   selected: selectedEmoji,
                   emojis: _accountEmojis,
-                  onSelect: (e) =>
-                      setDialogState(() => selectedEmoji = e),
+                  onSelect: (e) => setDialogState(() => selectedEmoji = e),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -228,7 +245,8 @@ class AccountsScreen extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: strings.accountNameHint,
                     hintStyle: GoogleFonts.notoSansThai(
-                        color: AppColors.textMuted),
+                      color: AppColors.textMuted,
+                    ),
                     filled: true,
                     fillColor: AppColors.lightPurple,
                     border: OutlineInputBorder(
@@ -236,7 +254,9 @@ class AccountsScreen extends StatelessWidget {
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -245,131 +265,23 @@ class AccountsScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(strings.cancel,
-                  style: GoogleFonts.notoSansThai(
-                      color: AppColors.textMuted)),
-            ),
-            TextButton(
-              onPressed: () {
-                if (ctrl.text.trim().isNotEmpty) {
-                  data.addAccount(ctrl.text.trim(),
-                      icon: selectedEmoji);
-                }
-                Navigator.of(ctx).pop();
-              },
               child: Text(
-                strings.confirm,
-                style: GoogleFonts.notoSansThai(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+                strings.cancel,
+                style: GoogleFonts.notoSansThai(color: AppColors.textMuted),
               ),
             ),
-          ],
-        ),
-      ),
-    ).then((_) => ctrl.dispose());
-  }
-
-  void _showEditDialog(
-      BuildContext context, AppStrings strings, Account account) {
-    final nameCtrl = TextEditingController(text: account.name);
-    final balanceCtrl = TextEditingController(
-        text: account.balance == 0
-            ? ''
-            : account.balance.toStringAsFixed(
-                account.balance.truncateToDouble() == account.balance ? 0 : 2));
-    String selectedEmoji = account.icon;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            strings.editAccountTitle,
-            style:
-                GoogleFonts.notoSansThai(fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(strings.selectEmoji,
-                    style: GoogleFonts.notoSansThai(
-                        fontSize: 12, color: AppColors.textMuted)),
-                const SizedBox(height: 8),
-                EmojiPickerGrid(
-                  selected: selectedEmoji,
-                  emojis: _accountEmojis,
-                  onSelect: (e) =>
-                      setDialogState(() => selectedEmoji = e),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameCtrl,
-                  autofocus: false,
-                  style: GoogleFonts.notoSansThai(fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: strings.accountNameHint,
-                    hintStyle: GoogleFonts.notoSansThai(
-                        color: AppColors.textMuted),
-                    filled: true,
-                    fillColor: AppColors.lightPurple,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: balanceCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true, signed: false),
-                  style: GoogleFonts.inter(fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: strings.balanceHint,
-                    hintStyle: GoogleFonts.notoSansThai(
-                        color: AppColors.textMuted),
-                    filled: true,
-                    fillColor: AppColors.lightPurple,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(strings.cancel,
-                  style: GoogleFonts.notoSansThai(
-                      color: AppColors.textMuted)),
-            ),
             TextButton(
               onPressed: () {
-                if (nameCtrl.text.trim().isNotEmpty) {
-                  data.renameAccount(
-                    account.id,
-                    nameCtrl.text.trim(),
-                    newIcon: selectedEmoji,
-                  );
-                }
-                final newBalance =
-                    double.tryParse(balanceCtrl.text.trim());
-                if (newBalance != null) {
-                  data.setAccountBalance(account.id, newBalance);
-                }
+                final name = ctrl.text.trim();
+                
+                // 1. Unfocus and Pop first to clear the UI state
+                FocusScope.of(ctx).unfocus();
                 Navigator.of(ctx).pop();
+
+                // 2. Then update data which triggers rebuilds
+                if (name.isNotEmpty) {
+                  data.addAccount(name, icon: selectedEmoji);
+                }
               },
               child: Text(
                 strings.confirm,
@@ -383,8 +295,151 @@ class AccountsScreen extends StatelessWidget {
         ),
       ),
     ).then((_) {
-      nameCtrl.dispose();
-      balanceCtrl.dispose();
+      // Small delay to ensure TextField is fully unmounted before disposal
+      Future.delayed(Duration.zero, () => ctrl.dispose());
+    });
+  }
+
+  void _showEditDialog(
+    BuildContext context,
+    AppStrings strings,
+    Account account,
+  ) {
+    final nameCtrl = TextEditingController(text: account.name);
+    final balanceCtrl = TextEditingController(
+      text: account.balance == 0
+          ? ''
+          : account.balance.toStringAsFixed(
+              account.balance.truncateToDouble() == account.balance ? 0 : 2,
+            ),
+    );
+    String selectedEmoji = account.icon;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            strings.editAccountTitle,
+            style: GoogleFonts.notoSansThai(fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  strings.selectEmoji,
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                EmojiPickerGrid(
+                  selected: selectedEmoji,
+                  emojis: _accountEmojis,
+                  onSelect: (e) => setDialogState(() => selectedEmoji = e),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  autofocus: false,
+                  style: GoogleFonts.notoSansThai(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: strings.accountNameHint,
+                    hintStyle: GoogleFonts.notoSansThai(
+                      color: AppColors.textMuted,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.lightPurple,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: balanceCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: strings.balanceHint,
+                    hintStyle: GoogleFonts.notoSansThai(
+                      color: AppColors.textMuted,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.lightPurple,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                strings.cancel,
+                style: GoogleFonts.notoSansThai(color: AppColors.textMuted),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = nameCtrl.text.trim();
+                final balanceStr = balanceCtrl.text.trim();
+
+                // 1. Unfocus and Pop first
+                FocusScope.of(ctx).unfocus();
+                Navigator.of(ctx).pop();
+
+                // 2. Update data
+                if (name.isNotEmpty) {
+                  data.renameAccount(
+                    account.id,
+                    name,
+                    newIcon: selectedEmoji,
+                  );
+                }
+                final newBalance = double.tryParse(balanceStr);
+                if (newBalance != null) {
+                  data.setAccountBalance(account.id, newBalance);
+                }
+              },
+              child: Text(
+                strings.confirm,
+                style: GoogleFonts.notoSansThai(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).then((_) {
+      // Use zero delay to ensure unmounting finishes
+      Future.delayed(Duration.zero, () {
+        nameCtrl.dispose();
+        balanceCtrl.dispose();
+      });
     });
   }
 }

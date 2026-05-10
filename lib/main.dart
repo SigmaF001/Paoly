@@ -5,22 +5,37 @@ import 'data/finance_data.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
+import 'dart:developer' as developer;
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ),
-  );
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  final settings = AppSettings();
-  await settings.load();
-  final data = FinanceData();
-  data.seedDefaultAccount();
+    final settings = AppSettings();
+    final data = FinanceData();
 
-  runApp(PaolyApp(settings: settings, data: data));
+    // Load essential data
+    await settings.load();
+    data.seedDefaultAccount();
+
+    // Set UI style early but safely
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
+
+    runApp(PaolyApp(settings: settings, data: data));
+  } catch (e, stack) {
+    developer.log('Fatal startup error', error: e, stackTrace: stack);
+    // Even if it fails, try to show something or let it crash gracefully
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(child: Text('Startup Error: $e')),
+      ),
+    ));
+  }
 }
 
 class PaolyApp extends StatefulWidget {
@@ -33,10 +48,20 @@ class PaolyApp extends StatefulWidget {
 }
 
 class _PaolyAppState extends State<PaolyApp> {
+  late final ThemeData _theme;
+
   @override
   void initState() {
     super.initState();
+    _theme = AppTheme.theme;
     widget.settings.addListener(_onSettingsChanged);
+
+    // Defer orientation locking to ensure engine is ready
+    Future.delayed(const Duration(milliseconds: 500), () {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    });
   }
 
   @override
@@ -52,7 +77,7 @@ class _PaolyAppState extends State<PaolyApp> {
     return MaterialApp(
       title: 'Paoly',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
+      theme: _theme,
       locale: Locale(widget.settings.langCode),
       home: widget.settings.isFirstLaunch
           ? OnboardingScreen(settings: widget.settings)

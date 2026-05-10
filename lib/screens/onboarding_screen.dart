@@ -25,9 +25,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _onConfirm() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
+
+    // Hide keyboard before transitioning to prevent layout issues
+    FocusScope.of(context).unfocus();
+
     setState(() => _loading = true);
     await widget.settings.completeOnboarding(name);
-    // PaolyApp rebuilds automatically via AppSettings listener — no Navigator needed
   }
 
   @override
@@ -36,11 +39,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
-              const Spacer(),
+              const SizedBox(height: 60),
               Container(
                 width: 80,
                 height: 80,
@@ -80,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const SizedBox(height: 32),
               TextField(
                 controller: _nameController,
-                autofocus: true,
+                autofocus: false, // Prevent immediate jank on startup
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _onConfirm(),
                 style: GoogleFonts.notoSansThai(
@@ -105,8 +108,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide:
-                        const BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -123,8 +128,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        AppColors.primary.withAlpha(120),
+                    disabledBackgroundColor: AppColors.primary.withAlpha(120),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -149,7 +153,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 60),
             ],
           ),
         ),

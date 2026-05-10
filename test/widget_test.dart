@@ -15,8 +15,7 @@ void main() {
     final settings = AppSettings();
     await settings.load();
 
-    await tester.pumpWidget(
-        PaolyApp(data: FinanceData(), settings: settings));
+    await tester.pumpWidget(PaolyApp(data: FinanceData(), settings: settings));
     await tester.pump();
 
     expect(find.text('ภาพรวมการเงิน'), findsOneWidget);

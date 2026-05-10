@@ -14,11 +14,11 @@ class AppColors {
 
 class AppTheme {
   static ThemeData get theme => ThemeData(
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          surface: AppColors.background,
-        ),
-        useMaterial3: true,
-      );
+    scaffoldBackgroundColor: AppColors.background,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      surface: AppColors.background,
+    ),
+    useMaterial3: true,
+  );
 }
