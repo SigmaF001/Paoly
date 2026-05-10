@@ -6,6 +6,7 @@ import '../l10n/app_strings.dart';
 import '../models/account.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
+import '../utils/sounds.dart';
 import '../widgets/emoji_picker_grid.dart';
 
 const List<String> _accountEmojis = [
@@ -149,7 +150,10 @@ class AccountsScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: () => _showEditDialog(context, strings, a),
+                onTap: () {
+                  AppSounds.playSoftClick();
+                  _showEditDialog(context, strings, a);
+                },
                 child: const Icon(Icons.edit_outlined,
                     size: 18, color: AppColors.textMuted),
               ),
@@ -162,7 +166,10 @@ class AccountsScreen extends StatelessWidget {
 
   Widget _addAccountButton(BuildContext context, AppStrings strings) {
     return GestureDetector(
-      onTap: () => _showAddDialog(context, strings),
+      onTap: () {
+        AppSounds.playSoftClick();
+        _showAddDialog(context, strings);
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),

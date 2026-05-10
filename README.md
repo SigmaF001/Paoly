@@ -32,9 +32,13 @@ by category, and review monthly summaries — all in one place.
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
-> Coming soon
+| Dashboard | Scan Slip | Reports |
+|:---:|:---:|:---:|
+| <img src="screenshots/dashboard.png" width="250" alt="Dashboard"> | <img src="screenshots/scan_slip.png" width="250" alt="Scan Slip"> | <img src="screenshots/reports.png" width="250" alt="Reports"> |
+
+---
 
 ## Getting Started
 
@@ -46,7 +50,7 @@ by category, and review monthly summaries — all in one place.
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/paoly.git
+git clone https://github.com/SigmaF001/Paoly.git
 cd paoly
 flutter pub get
 flutter run

@@ -10,6 +10,7 @@ import '../models/transaction.dart';
 import '../services/slip_scanner_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
+import '../utils/sounds.dart';
 import 'emoji_picker_grid.dart';
 
 const List<String> _categoryEmojis = [
@@ -122,6 +123,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   }
 
   void _save() {
+    AppSounds.playSoftClick();
     final strings = AppStrings.of(widget.settings.langCode);
     final amountText = _amountController.text.trim();
     if (amountText.isEmpty) {
@@ -723,12 +725,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     final selected = _isExpense == isExpense;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() {
-          _isExpense = isExpense;
-          final cats = _categoriesForType(isExpense);
-          _selectedCategoryId =
-              cats.isNotEmpty ? cats.first.id : null;
-        }),
+        onTap: () {
+          AppSounds.playSoftClick();
+          setState(() {
+            _isExpense = isExpense;
+            final cats = _categoriesForType(isExpense);
+            _selectedCategoryId =
+                cats.isNotEmpty ? cats.first.id : null;
+          });
+        },
         child: Container(
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
