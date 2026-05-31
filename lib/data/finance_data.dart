@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
+import 'pet_data.dart';
 
 const List<TxCategory> _defaultCategories = [
   TxCategory(
@@ -150,6 +151,10 @@ class FinanceData extends ChangeNotifier {
         name: old.name,
         balance: old.balance + (t.isExpense ? -t.amount : t.amount),
       );
+    }
+    // Earn coins for the dog-raising feature whenever income is recorded.
+    if (!t.isExpense) {
+      PetData.instance.awardForIncome(t.amount);
     }
     notifyListeners();
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'data/app_settings.dart';
 import 'data/finance_data.dart';
+import 'data/pet_data.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
@@ -16,6 +17,7 @@ Future<void> main() async {
 
     // Load essential data
     await settings.load();
+    await PetData.instance.load();
     data.seedDefaultAccount();
 
     // Set UI style early but safely

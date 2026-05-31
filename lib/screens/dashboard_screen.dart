@@ -9,6 +9,7 @@ import '../utils/formatter.dart';
 import '../widgets/add_transaction_sheet.dart';
 import '../widgets/year_month_selector.dart';
 import 'accounts_screen.dart';
+import 'pet_screen.dart';
 import 'reports_screen.dart';
 import 'transactions_screen.dart';
 
@@ -71,6 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   ReportsScreen(data: widget.data, settings: widget.settings),
                   AccountsScreen(data: widget.data, settings: widget.settings),
+                  const PetScreen(),
                 ],
               ),
             ),
@@ -89,6 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       null,
       {'icon': '📊', 'label': strings.navReports},
       {'icon': '👛', 'label': strings.navAccounts},
+      {'icon': '🐶', 'label': 'น้องหมา'},
     ];
 
     return Container(
