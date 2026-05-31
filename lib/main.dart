@@ -30,11 +30,11 @@ Future<void> main() async {
   } catch (e, stack) {
     developer.log('Fatal startup error', error: e, stackTrace: stack);
     // Even if it fails, try to show something or let it crash gracefully
-    runApp(MaterialApp(
-      home: Scaffold(
-        body: Center(child: Text('Startup Error: $e')),
+    runApp(
+      MaterialApp(
+        home: Scaffold(body: Center(child: Text('Startup Error: $e'))),
       ),
-    ));
+    );
   }
 }
 
@@ -58,9 +58,7 @@ class _PaolyAppState extends State<PaolyApp> {
 
     // Defer orientation locking to ensure engine is ready
     Future.delayed(const Duration(milliseconds: 500), () {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     });
   }
 

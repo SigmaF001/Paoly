@@ -208,7 +208,13 @@ class SlipScannerService {
       final d = int.tryParse(dmyMatch.group(1)!);
       final m = int.tryParse(dmyMatch.group(2)!);
       int y = int.tryParse(dmyMatch.group(3)!) ?? 0;
-      if (y < 100) y += 2000;
+      if (y < 100) {
+        if (y >= 50) {
+          y += 1457; // Thai BE two-digit year (e.g. 69 -> BE 2569 -> 2026 CE)
+        } else {
+          y += 2000; // CE two-digit year (e.g. 26 -> 2026 CE)
+        }
+      }
       if (y > 2500) y -= 543;
       if (d != null && m != null && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
         try {
@@ -217,7 +223,7 @@ class SlipScannerService {
       }
     }
 
-    // Pattern 3: long format — "10 May 2025", "10 พ.ค. 2568" (UOB, CIMB, some KBank)
+    // Pattern 3: long format — "10 May 2025", "10 พ.ค. 2568", "29 พ.ค. 69" (UOB, CIMB, some KBank)
     final longRx = RegExp(
       r'(\d{1,2})\s+([ก-ฮa-zA-Z][ก-ฮa-zA-Z.]{1,10})\s+(\d{2,4})',
     );
@@ -226,7 +232,13 @@ class SlipScannerService {
       final d = int.tryParse(longMatch.group(1)!);
       final monthStr = longMatch.group(2)!;
       int y = int.tryParse(longMatch.group(3)!) ?? 0;
-      if (y < 100) y += 2000;
+      if (y < 100) {
+        if (y >= 50) {
+          y += 1457; // Thai BE two-digit year (e.g. 69 -> BE 2569 -> 2026 CE)
+        } else {
+          y += 2000; // CE two-digit year (e.g. 26 -> 2026 CE)
+        }
+      }
       if (y > 2500) y -= 543;
       final m = _parseThaiMonth(monthStr) ?? _parseEnglishMonth(monthStr);
       if (d != null && m != null) {
@@ -241,7 +253,77 @@ class SlipScannerService {
 
   // ─── Receiver Extraction ─────────────────────────────────────────────────
 
+  String? _extractReceiverSequential(String text) {
+    final lines = text.split('\n');
+    final nameCandidates = <String>[];
+
+    // Filter out obviously non-name lines
+    final avoidKeywords = [
+      'สำเร็จ', 'successful', 'success',
+      'บาท', 'baht',
+      'fee', 'ค่าธรรมเนียม',
+      'เลขที่', 'รายการ', 'อ้างอิง', 'ref',
+      'จำนวน', 'ยอดเงิน', 'เงินโอน', 'ยอดโอน', 'total', 'amount',
+      'วันที่', 'เวลา', 'date', 'time',
+      'ธนาคาร', 'ธ.', 'bank', 'กสิกร', 'กรุงไทย', 'กรุงเทพ', 'ไทยพาณิชย์', 'ทหารไทย',
+      'ttb', 'kbank', 'scb', 'bbl', 'krungthai', 'uob', 'cimb', 'gsb', 'bay', 'กรุงศรี',
+      'พร้อมเพย์', 'promptpay',
+      'จาก', 'ไปยัง', 'to', 'from',
+      'บัญชี', 'account', 'no.',
+      'โอน', 'transfer', 'payment', 'make by', 'make'
+    ];
+
+    final dateMonthRx = RegExp(
+      r'(พ.ค.|ม.ค.|ก.พ.|มี.ค.|เม.ย.|มิ.ย.|ก.ค.|ส.ค.|ก.ย.|ต.ค.|พ.ย.|ธ.ค.|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)',
+      caseSensitive: false,
+    );
+    final timeRx = RegExp(r'\d{1,2}:\d{2}');
+    final accountRx = RegExp(r'[xX\-\d]{7,}');
+    final hasLetterRx = RegExp(r'[a-zA-Zก-๙]');
+
+    for (var rawLine in lines) {
+      final line = rawLine.trim();
+      if (line.length < 3) continue;
+
+      // Skip lines with special characters like arrows alone
+      if (line == '↓' || line == 'v' || line == '|') continue;
+
+      // Must contain at least one letter
+      if (!hasLetterRx.hasMatch(line)) continue;
+
+      // Check avoid keywords
+      bool avoid = false;
+      for (final kw in avoidKeywords) {
+        if (line.toLowerCase().contains(kw)) {
+          avoid = true;
+          break;
+        }
+      }
+      if (avoid) continue;
+
+      // Check dates/times
+      if (dateMonthRx.hasMatch(line) || timeRx.hasMatch(line)) continue;
+
+      // Check account pattern
+      if (accountRx.hasMatch(line)) continue;
+
+      // If it passes all checks, it's a candidate!
+      nameCandidates.add(line);
+    }
+
+    if (nameCandidates.length >= 2) {
+      // The second name is the receiver (first is sender)
+      return nameCandidates[1];
+    }
+    return null;
+  }
+
   String? _extractReceiver(String text) {
+    // 1. Try sequential heuristic first (sender -> receiver)
+    final seqReceiver = _extractReceiverSequential(text);
+    if (seqReceiver != null) return seqReceiver;
+
+    // 2. Fallback to keyword search
     final keywordRx = RegExp(
       r'Receiver|Payee|Beneficiary|Account\s*Name|To|ถึง|ผู้รับ|ไปยัง',
       caseSensitive: false,
