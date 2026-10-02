@@ -26,12 +26,22 @@ class ReportsScreen extends StatelessWidget {
         final strings = AppStrings.of(settings.langCode);
         final categoryTotals = <String, Map<String, dynamic>>{};
         for (final t in data.filteredTransactions.where((t) => t.isExpense)) {
+          final category = data.categoryFor(t);
+          final key = t.categoryId ?? category?.id ?? 'legacy:${t.category}';
           categoryTotals.putIfAbsent(
-            t.category,
-            () => {'icon': t.icon, 'name': t.category, 'total': 0.0},
+            key,
+            () => {
+              'icon': category?.icon ?? t.icon,
+              'name': category == null
+                  ? t.category
+                  : (settings.langCode == 'th'
+                        ? category.nameTh
+                        : category.nameEn),
+              'total': 0.0,
+            },
           );
-          categoryTotals[t.category]!['total'] =
-              (categoryTotals[t.category]!['total'] as double) + t.amount;
+          categoryTotals[key]!['total'] =
+              (categoryTotals[key]!['total'] as double) + t.amount;
         }
         final categories = categoryTotals.values.toList()
           ..sort(

@@ -273,7 +273,7 @@ class AccountsScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 final name = ctrl.text.trim();
-                
+
                 // 1. Unfocus and Pop first to clear the UI state
                 FocusScope.of(ctx).unfocus();
                 Navigator.of(ctx).pop();
@@ -412,14 +412,10 @@ class AccountsScreen extends StatelessWidget {
 
                 // 2. Update data
                 if (name.isNotEmpty) {
-                  data.renameAccount(
-                    account.id,
-                    name,
-                    newIcon: selectedEmoji,
-                  );
+                  data.renameAccount(account.id, name, newIcon: selectedEmoji);
                 }
                 final newBalance = double.tryParse(balanceStr);
-                if (newBalance != null) {
+                if (newBalance != null && newBalance.isFinite) {
                   data.setAccountBalance(account.id, newBalance);
                 }
               },

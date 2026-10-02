@@ -58,6 +58,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   final _amountController = TextEditingController();
   final _scanner = SlipScannerService();
   bool _isScanning = false;
+  bool _isSaving = false;
+  String? _savedTransactionId;
 
   bool get _isThai => widget.settings.langCode == 'th';
 
@@ -111,25 +113,26 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       ),
     );
 
-    if (source == null) return;
-
-    final XFile? image = await picker.pickImage(source: source);
-    if (image == null) return;
-
+    if (source == null || !mounted) return;
     setState(() => _isScanning = true);
-
     try {
+      final XFile? image = await picker.pickImage(source: source);
+      if (!mounted || image == null) return;
       final slipData = await _scanner.processImage(image.path);
 
+      if (!mounted) return;
       setState(() {
         _isExpense = true; // Slips are usually expenses
         final expenseCats = _categoriesForType(true);
-        _selectedCategoryId =
-            expenseCats.isNotEmpty ? expenseCats.first.id : null;
+        _selectedCategoryId = expenseCats.isNotEmpty
+            ? expenseCats.first.id
+            : null;
         if (slipData.amount != null) {
           _amountController.text = _formatAmount(slipData.amount!);
         }
-        if (slipData.date != null) {
+        if (slipData.date != null &&
+            slipData.date!.year >= 1900 &&
+            slipData.date!.year <= 2100) {
           _selectedDate = slipData.date!;
         }
         if (slipData.receiver != null) {
@@ -147,7 +150,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_isSaving || _isScanning) return;
     AppSounds.playSoftClick();
     final strings = AppStrings.of(widget.settings.langCode);
     final amountText = _amountController.text.trim();
@@ -165,7 +169,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
 
     final amount = double.tryParse(amountText);
-    if (amount == null || amount <= 0) {
+    if (amount == null || !amount.isFinite || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -192,30 +196,54 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         _selectedAccountId ??
         (widget.data.accounts.isNotEmpty ? widget.data.accounts.first.id : '');
 
-    widget.data.addTransaction(
-      Transaction(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+    setState(() => _isSaving = true);
+    try {
+      _savedTransactionId ??= DateTime.now().microsecondsSinceEpoch.toString();
+      final transaction = Transaction(
+        id: _savedTransactionId!,
         icon: selectedCat.icon,
         title: title,
         category: selectedCat.nameTh,
+        categoryId: selectedCat.id,
         date: _selectedDate,
         amount: amount,
         isExpense: _isExpense,
         accountId: accountId,
-      ),
-    );
-
-    Navigator.of(context).pop();
+      );
+      if (widget.data.transactions.any((t) => t.id == transaction.id)) {
+        widget.data.updateTransaction(transaction);
+      } else {
+        widget.data.addTransaction(transaction);
+      }
+      await widget.data.flush();
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isThai
+                  ? 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง'
+                  : 'Could not save. Please try again.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: _selectedDate.year >= 1900 && _selectedDate.year <= 2100
+          ? _selectedDate
+          : DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100, 12, 31),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (mounted && picked != null) setState(() => _selectedDate = picked);
   }
 
   void _showAddCategoryDialog(AppStrings strings) {
@@ -467,7 +495,12 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         ),
                       ),
                       IconButton(
-                        onPressed: _isScanning ? null : _scanSlip,
+                        onPressed:
+                            _isScanning ||
+                                _isSaving ||
+                                !SlipScannerService.isSupported
+                            ? null
+                            : _scanSlip,
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -480,7 +513,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                             color: AppColors.primary,
                           ),
                         ),
-                        tooltip: strings.scanSlip,
+                        tooltip: SlipScannerService.isSupported
+                            ? strings.scanSlip
+                            : (_isThai
+                                  ? 'สแกนสลิปรองรับ Android และ iOS'
+                                  : 'Slip scanning is available on Android and iOS'),
                       ),
                     ],
                   ),
@@ -764,7 +801,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _isScanning ? null : _save,
+                      onPressed: _isScanning || _isSaving ? null : _save,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -787,7 +824,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               ),
             ),
           ),
-          if (_isScanning)
+          if (_isScanning || _isSaving)
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -803,7 +840,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       const CircularProgressIndicator(),
                       const SizedBox(height: 16),
                       Text(
-                        strings.scanning,
+                        _isSaving
+                            ? (_isThai ? 'กำลังบันทึก…' : 'Saving…')
+                            : strings.scanning,
                         style: GoogleFonts.notoSansThai(
                           fontWeight: FontWeight.w600,
                           color: AppColors.primary,

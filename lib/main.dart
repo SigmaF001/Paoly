@@ -1,3 +1,4 @@
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'data/app_settings.dart';
@@ -18,7 +19,9 @@ Future<void> main() async {
     // Load essential data
     await settings.load();
     await PetData.instance.load();
+    await data.load();
     data.seedDefaultAccount();
+    await data.flush();
 
     // Set UI style early but safely
     SystemChrome.setSystemUIOverlayStyle(
@@ -60,6 +63,7 @@ class _PaolyAppState extends State<PaolyApp> {
 
     // Defer orientation locking to ensure engine is ready
     Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     });
   }
@@ -79,6 +83,8 @@ class _PaolyAppState extends State<PaolyApp> {
       debugShowCheckedModeBanner: false,
       theme: _theme,
       locale: Locale(widget.settings.langCode),
+      supportedLocales: const [Locale('th'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       home: widget.settings.isFirstLaunch
           ? OnboardingScreen(settings: widget.settings)
           : DashboardScreen(data: widget.data, settings: widget.settings),

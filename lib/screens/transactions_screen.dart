@@ -1,3 +1,4 @@
+import '../widgets/transaction_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_settings.dart';
@@ -142,7 +143,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Dismissible(
       key: Key(t.id),
       direction: DismissDirection.endToStart,
-      onDismissed: (_) => widget.data.removeTransaction(t.id),
+      confirmDismiss: (_) =>
+          confirmTransactionDeletion(context, t, widget.settings),
+      onDismissed: (_) =>
+          deleteTransactionWithUndo(context, widget.data, t, widget.settings),
       background: Container(
         margin: const EdgeInsets.only(bottom: 8),
         alignment: Alignment.centerRight,

@@ -1,3 +1,4 @@
+import '../widgets/transaction_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_settings.dart';
@@ -57,6 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            FinanceSaveStatus(data: widget.data, settings: widget.settings),
             Expanded(
               child: IndexedStack(
                 index: _pageIndex,
@@ -525,7 +527,10 @@ class _HomeTabState extends State<_HomeTab> {
     return Dismissible(
       key: Key(t.id),
       direction: DismissDirection.endToStart,
-      onDismissed: (_) => widget.data.removeTransaction(t.id),
+      confirmDismiss: (_) =>
+          confirmTransactionDeletion(context, t, widget.settings),
+      onDismissed: (_) =>
+          deleteTransactionWithUndo(context, widget.data, t, widget.settings),
       background: Container(
         margin: const EdgeInsets.only(bottom: 8),
         alignment: Alignment.centerRight,

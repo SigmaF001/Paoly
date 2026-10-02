@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
 import 'package:paoly/main.dart';
 import 'package:paoly/data/app_settings.dart';
 import 'package:paoly/data/finance_data.dart';
@@ -15,10 +16,18 @@ void main() {
     final settings = AppSettings();
     await settings.load();
 
-    await tester.pumpWidget(PaolyApp(data: FinanceData(), settings: settings));
+    final data = FinanceData();
+    await data.load();
+    data.seedDefaultAccount();
+    data.setAccountBalance(data.accounts.first.id, 48320.50);
+    await data.flush();
+    await tester.pumpWidget(PaolyApp(data: data, settings: settings));
     await tester.pump();
 
     expect(find.text('ภาพรวมการเงิน'), findsOneWidget);
-    expect(find.text('฿ 48,320.50'), findsOneWidget);
+    expect(find.text('฿ 48,320.50'), findsWidgets);
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(const SizedBox.shrink());
+    data.dispose();
   });
 }

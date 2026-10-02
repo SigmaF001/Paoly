@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../models/account.dart';
 import '../models/category.dart';
@@ -96,6 +98,121 @@ const List<TxCategory> _defaultCategories = [
 ];
 
 class FinanceData extends ChangeNotifier {
+  FinanceData({PetData? pet}) : _pet = pet ?? PetData.instance;
+  final PetData _pet;
+  static const storageKey = 'finance_state_v1';
+  Future<void> _writes = Future.value();
+  Object? saveError;
+  bool _disposed = false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(storageKey);
+    if (raw != null) {
+      // Parse the entire snapshot first. Never overwrite unreadable data.
+      final m = jsonDecode(raw) as Map<String, dynamic>;
+      if (m['version'] != 1) {
+        throw const FormatException('Unsupported finance data version');
+      }
+      final loadedAccounts = (m['accounts'] as List)
+          .map((e) => Account.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      final loadedTransactions = (m['transactions'] as List)
+          .map((e) => Transaction.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      final loadedCategories = (m['categories'] as List)
+          .map((e) => TxCategory.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      if (loadedAccounts.any((a) => !a.balance.isFinite) ||
+          loadedTransactions.any(
+            (t) =>
+                !t.amount.isFinite ||
+                t.amount <= 0 ||
+                !loadedAccounts.any((a) => a.id == t.accountId),
+          )) {
+        throw const FormatException('Invalid financial data');
+      }
+      accounts
+        ..clear()
+        ..addAll(loadedAccounts);
+      transactions
+        ..clear()
+        ..addAll(loadedTransactions);
+      categories
+        ..clear()
+        ..addAll(loadedCategories);
+      for (final category in _defaultCategories) {
+        if (!categories.any((c) => c.id == category.id)) {
+          categories.add(category);
+        }
+      }
+    }
+    await _pet.load();
+    await _pet.syncIncomeRewards(_incomeRewards);
+    notifyListeners();
+  }
+
+  // Calculate from cents so splitting income cannot create extra rewards.
+  int get _incomeRewards =>
+      transactions
+          .where((t) => !t.isExpense)
+          .fold<int>(0, (sum, t) => sum + (t.amount * 100).round()) ~/
+      10000;
+
+  void _changed() {
+    final snapshot = jsonEncode({
+      'version': 1,
+      'accounts': accounts.map((a) => a.toJson()).toList(),
+      'transactions': transactions.map((t) => t.toJson()).toList(),
+      'categories': categories.map((c) => c.toJson()).toList(),
+    });
+    final rewards = _incomeRewards;
+    _writes = _writes.then((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (!await prefs.setString(storageKey, snapshot)) {
+          throw StateError('Financial data could not be saved');
+        }
+        // Reconcile only after finance is saved. Startup retries if interrupted.
+        await _pet.syncIncomeRewards(rewards);
+        saveError = null;
+      } catch (error) {
+        saveError = error;
+      }
+      if (!_disposed) notifyListeners();
+    });
+    notifyListeners();
+  }
+
+  Future<void> flush() async {
+    await _writes;
+    if (saveError != null) {
+      throw StateError('Financial data could not be saved: $saveError');
+    }
+  }
+
+  Future<void> retrySave() {
+    _changed();
+    return flush();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  TxCategory? categoryFor(Transaction t) {
+    for (final c in categories) {
+      if (t.categoryId != null
+          ? c.id == t.categoryId
+          : c.nameTh == t.category && c.isExpense == t.isExpense) {
+        return c;
+      }
+    }
+    return null;
+  }
+
   final List<Account> accounts = [];
   final List<Transaction> transactions = [];
   final List<TxCategory> categories = List.from(_defaultCategories);
@@ -140,8 +257,16 @@ class FinanceData extends ChangeNotifier {
 
   // ── Transactions ──────────────────────────────────────────────────────────
 
-  void addTransaction(Transaction t) {
-    transactions.insert(0, t);
+  void addTransaction(Transaction t, {int index = 0}) {
+    if (transactions.any((existing) => existing.id == t.id)) return;
+    if (!t.amount.isFinite ||
+        t.amount <= 0 ||
+        !accounts.any((a) => a.id == t.accountId)) {
+      throw ArgumentError(
+        'A transaction needs a positive finite amount and an existing account',
+      );
+    }
+    transactions.insert(index.clamp(0, transactions.length), t);
     final idx = accounts.indexWhere((a) => a.id == t.accountId);
     if (idx != -1) {
       final old = accounts[idx];
@@ -152,11 +277,38 @@ class FinanceData extends ChangeNotifier {
         balance: old.balance + (t.isExpense ? -t.amount : t.amount),
       );
     }
-    // Earn coins for the dog-raising feature whenever income is recorded.
-    if (!t.isExpense) {
-      PetData.instance.awardForIncome(t.amount);
+    _changed();
+  }
+
+  void updateTransaction(Transaction replacement) {
+    final index = transactions.indexWhere((t) => t.id == replacement.id);
+    if (index < 0) throw ArgumentError('Transaction does not exist');
+    if (!replacement.amount.isFinite ||
+        replacement.amount <= 0 ||
+        !accounts.any((a) => a.id == replacement.accountId)) {
+      throw ArgumentError('Invalid transaction');
     }
-    notifyListeners();
+    final old = transactions[index];
+    for (var i = 0; i < accounts.length; i++) {
+      final account = accounts[i];
+      var balance = account.balance;
+      if (account.id == old.accountId) {
+        balance += old.isExpense ? old.amount : -old.amount;
+      }
+      if (account.id == replacement.accountId) {
+        balance += replacement.isExpense
+            ? -replacement.amount
+            : replacement.amount;
+      }
+      accounts[i] = Account(
+        id: account.id,
+        icon: account.icon,
+        name: account.name,
+        balance: balance,
+      );
+    }
+    transactions[index] = replacement;
+    _changed();
   }
 
   void removeTransaction(String id) {
@@ -174,15 +326,15 @@ class FinanceData extends ChangeNotifier {
         balance: old.balance + (t.isExpense ? t.amount : -t.amount),
       );
     }
-    notifyListeners();
+    _changed();
   }
 
   // ── Accounts ──────────────────────────────────────────────────────────────
 
   void addAccount(String name, {String icon = '🏦'}) {
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final id = DateTime.now().microsecondsSinceEpoch.toString();
     accounts.add(Account(id: id, icon: icon, name: name.trim(), balance: 0));
-    notifyListeners();
+    _changed();
   }
 
   void renameAccount(String id, String newName, {String? newIcon}) {
@@ -195,10 +347,11 @@ class FinanceData extends ChangeNotifier {
       name: newName.trim(),
       balance: old.balance,
     );
-    notifyListeners();
+    _changed();
   }
 
   void setAccountBalance(String id, double newBalance) {
+    if (!newBalance.isFinite) throw ArgumentError.value(newBalance);
     final index = accounts.indexWhere((a) => a.id == id);
     if (index == -1) return;
     final old = accounts[index];
@@ -208,14 +361,14 @@ class FinanceData extends ChangeNotifier {
       name: old.name,
       balance: newBalance,
     );
-    notifyListeners();
+    _changed();
   }
 
   // ── Categories ────────────────────────────────────────────────────────────
 
   void addCategory(TxCategory c) {
     categories.add(c);
-    notifyListeners();
+    _changed();
   }
 
   void updateCategory(
@@ -231,12 +384,12 @@ class FinanceData extends ChangeNotifier {
       nameTh: nameTh,
       nameEn: nameEn,
     );
-    notifyListeners();
+    _changed();
   }
 
   void deleteCategory(String id) {
     categories.removeWhere((c) => c.id == id && !c.isDefault);
-    notifyListeners();
+    _changed();
   }
 
   // ── Seed ──────────────────────────────────────────────────────────────────

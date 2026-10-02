@@ -18,6 +18,9 @@ class PetData extends ChangeNotifier {
   factory PetData() => instance;
   PetData._internal();
 
+  @visibleForTesting
+  PetData.detached();
+
   static const _prefsKey = 'pet_state';
 
   /// 1 coin is earned per this much income (in account currency).
@@ -33,6 +36,7 @@ class PetData extends ChangeNotifier {
   String? _breedId;
   String _dogName = '';
   double _coins = 0;
+  int _incomeRewards = 0;
   double _hungerStored = maxHunger;
   DateTime _lastUpdate = DateTime.now();
   final Set<String> _owned = {};
@@ -41,7 +45,7 @@ class PetData extends ChangeNotifier {
   bool get hasPet => _breedId != null;
   DogBreed? get breed => _breedId == null ? null : DogBreed.byId(_breedId!);
   String get dogName => _dogName;
-  int get coins => _coins.floor();
+  int get coins => _coins < 0 ? 0 : _coins.floor();
   Set<String> get owned => Set.unmodifiable(_owned);
   Set<String> get equipped => Set.unmodifiable(_equipped);
 
@@ -76,17 +80,19 @@ class PetData extends ChangeNotifier {
         _breedId = m['breedId'] as String?;
         _dogName = (m['dogName'] as String?) ?? '';
         _coins = (m['coins'] as num?)?.toDouble() ?? 0;
+        _incomeRewards = (m['incomeRewards'] as num?)?.toInt() ?? 0;
         _hungerStored = (m['hunger'] as num?)?.toDouble() ?? maxHunger;
         _lastUpdate =
             DateTime.tryParse(m['lastUpdate'] as String? ?? '') ??
-                DateTime.now();
+            DateTime.now();
         _owned
           ..clear()
           ..addAll((m['owned'] as List?)?.map((e) => e.toString()) ?? const []);
         _equipped
           ..clear()
           ..addAll(
-              (m['equipped'] as List?)?.map((e) => e.toString()) ?? const []);
+            (m['equipped'] as List?)?.map((e) => e.toString()) ?? const [],
+          );
       } catch (_) {
         // Corrupted state: start fresh.
       }
@@ -97,18 +103,20 @@ class PetData extends ChangeNotifier {
 
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
+    final saved = await prefs.setString(
       _prefsKey,
       jsonEncode({
         'breedId': _breedId,
         'dogName': _dogName,
         'coins': _coins,
+        'incomeRewards': _incomeRewards,
         'hunger': _hungerStored,
         'lastUpdate': _lastUpdate.toIso8601String(),
         'owned': _owned.toList(),
         'equipped': _equipped.toList(),
       }),
     );
+    if (!saved) throw StateError('Pet data could not be saved');
   }
 
   /// Adopt a dog of the given breed with a name.
@@ -121,15 +129,15 @@ class PetData extends ChangeNotifier {
     await _persist();
   }
 
-  /// Award coins for received income. Returns the number of coins earned.
-  int awardForIncome(double amount) {
-    if (amount <= 0) return 0;
-    var earned = (amount / currencyPerCoin).floor();
-    if (earned < 1) earned = 1;
-    _coins += earned;
+  /// Reconcile rewards with the persisted ledger, including deletions/Undo.
+  /// Keep a debt internally if the removed reward was already spent; future
+  /// income repays it, preventing a delete/re-add exploit. Display never < 0.
+  Future<void> syncIncomeRewards(int total) async {
+    await load();
+    _coins += total - _incomeRewards;
+    _incomeRewards = total;
+    await _persist();
     notifyListeners();
-    _persist();
-    return earned;
   }
 
   /// Buy and immediately feed [food]. Returns false if not enough coins.

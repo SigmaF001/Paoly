@@ -24,4 +24,21 @@ class TxCategory {
         isExpense: isExpense,
         isDefault: isDefault,
       );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'icon': icon,
+    'nameTh': nameTh,
+    'nameEn': nameEn,
+    'isExpense': isExpense,
+    'isDefault': isDefault,
+  };
+  factory TxCategory.fromJson(Map<String, dynamic> m) => TxCategory(
+    id: m['id'] as String,
+    icon: m['icon'] as String,
+    nameTh: m['nameTh'] as String,
+    nameEn: m['nameEn'] as String,
+    isExpense: m['isExpense'] as bool,
+    isDefault: m['isDefault'] as bool? ?? false,
+  );
 }

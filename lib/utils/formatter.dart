@@ -29,7 +29,8 @@ const _enMonths = [
 ];
 
 String formatCurrency(double amount) {
-  final str = amount.toStringAsFixed(2);
+  final negative = amount < 0;
+  final str = amount.abs().toStringAsFixed(2);
   final parts = str.split('.');
   final intPart = parts[0];
   final decPart = parts[1];
@@ -40,7 +41,8 @@ String formatCurrency(double amount) {
     buf.write(intPart[i]);
   }
 
-  return decPart == '00' ? '฿ $buf' : '฿ $buf.$decPart';
+  final sign = negative ? '-' : '';
+  return decPart == '00' ? '฿ $sign$buf' : '฿ $sign$buf.$decPart';
 }
 
 String formatDate(DateTime date, {String langCode = 'th'}) {

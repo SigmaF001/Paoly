@@ -9,7 +9,9 @@ on food and accessories for your animated companion.
 ## 🚀 Key Features
 
 ### 💰 Finance
-- **Smart Slip Scanner** — Auto-extract amount, date, and recipient from bank transfer slips using on-device OCR. Supports K-Plus, MAKE by KBank, SCB, BBL, Krungthai, GSB, ttb, Krungsri, UOB, and CIMB.
+- **Slip Scanner (Android/iOS)** — Suggest amount, date, and recipient from readable Latin text and supported QR fields using on-device processing. Review every value before saving. Thai text recognition and bank-specific accuracy are not guaranteed; desktop/web use manual entry.
+- **Local finance persistence** — Accounts, transactions, and categories reload on restart. Failed saves show a retry banner.
+- **Safe deletion** — Confirm before deleting a transaction, with an Undo action.
 - **Multi-account tracking** — Manage multiple accounts (cash, bank, savings, etc.)
 - **Income & expense logging** — Add transactions with category, date, and account.
 - **Custom categories** — Create your own income/expense categories with emoji icons.
@@ -20,7 +22,7 @@ on food and accessories for your animated companion.
 
 ### 🐶 น้องหมา — Dog-Raising System
 - **10 selectable breeds** — Golden Retriever, French Bulldog, Shiba Inu, Siberian Husky, Poodle, Beagle, Pembroke Welsh Corgi, Dachshund, German Shepherd, Border Collie.
-- **Earn coins from income** — Every 100 THB of income = 1 🪙 coin.
+- **Earn coins from income** — Every 100 THB of cumulative recorded income = 1 🪙 coin. Deleting income reverses its contribution; Undo restores it. Already-spent rewards are offset against future rewards.
 - **Real-time hunger system** — Hunger drains continuously (even while the app is closed). Feed your dog to restore it.
 - **Mood reflects hunger** — Happy 😊 when full, neutral 😐 when getting hungry, sad 😢 with tears when very hungry.
 - **Food shop** — 5 food items (🦴 🥣 🍗 🍖 🥩) at different coin prices and hunger restore amounts.
@@ -33,18 +35,18 @@ on food and accessories for your animated companion.
 ## 🇹🇭 คุณสมบัติเด่น
 
 ### 💰 การเงิน
-- **ระบบอ่านสลิปอัจฉริยะ** — สกัดยอดเงิน วันที่ และชื่อผู้รับจากสลิปโอนเงินด้วย OCR บนเครื่อง รองรับ K-Plus, MAKE by KBank, SCB, BBL, กรุงไทย, ออมสิน, ttb, กรุงศรี, UOB และ CIMB
+- **อ่านสลิป (Android/iOS)** — ช่วยกรอกข้อมูลจากตัวอักษรละตินและ QR ที่รองรับบนเครื่อง ต้องตรวจค่าก่อนบันทึก ยังไม่รับรองการอ่านข้อความไทยหรือความแม่นยำรายธนาคาร ส่วน desktop/web ใช้การกรอกเอง
 - **จัดการได้หลายบัญชี** — แยกกระเป๋าเงิน บัญชีธนาคาร หรือเงินออมได้อย่างอิสระ
 - **บันทึกรายรับ-รายจ่าย** — พร้อมระบุหมวดหมู่ วันที่ และบัญชีที่ใช้
 - **หมวดหมู่ปรับแต่งได้** — เพิ่ม/แก้ไขหมวดหมู่พร้อมไอคอนอิโมจิที่ชอบ
 - **สรุปรายงานรายเดือน** — ดูสถิติการใช้จ่ายแยกตามหมวดหมู่
 - **ค้นหาประวัติย้อนหลัง** — เลือกดูรายการตามเดือนและปีที่ต้องการ
 - **รองรับ 2 ภาษา** — ไทย 🇹🇭 และอังกฤษ 🇬🇧
-- **ข้อมูลอยู่ในเครื่อง** — ไม่มีการส่งข้อมูลออกไปภายนอก ปลอดภัย 100%
+- **ข้อมูลอยู่ในเครื่อง** — ข้อมูลการเงินบันทึกบนอุปกรณ์ และอ่านสลิปบนเครื่อง
 
 ### 🐶 ระบบเลี้ยงน้องหมา
 - **เลือกได้ 10 สายพันธุ์** — โกลเด้น รีทรีฟเวอร์, เฟรนช์ บูลด็อก, ชิบะ อินุ, ไซบีเรียน ฮัสกี้, พุดเดิ้ล, บีเกิล, คอร์กี้, ดัชชุน, เยอรมัน เชเพิร์ด, บอร์เดอร์ คอลลี่
-- **ได้ coin จากรายรับ** — ทุกๆ 100 บาทที่บันทึกเป็นรายรับ = 1 🪙 coin
+- **ได้ coin จากรายรับ** — รายรับสะสมทุก 100 บาท = 1 🪙 coin ลบรายรับแล้วปรับรางวัลคืน และ Undo คืนรางวัลตามรายการ หากใช้เหรียญไปแล้วจะหักชดเชยจากรางวัลครั้งถัดไป
 - **ระบบความหิวเรียลไทม์** — ความหิวลดต่อเนื่องแม้ปิดแอป ต้องให้อาหารสม่ำเสมอ
 - **สีหน้าบอกอารมณ์** — อิ่มมาก 😊 / เริ่มหิว 😐 / หิวมาก 😢 (มีน้ำตา)
 - **ร้านอาหาร** — อาหาร 5 ชนิด ราคาและค่าความอิ่มต่างกัน

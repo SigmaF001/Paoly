@@ -15,6 +15,11 @@ class SlipScannerService {
   TextRecognizer? _textRecognizer;
   BarcodeScanner? _barcodeScanner;
 
+  static bool get isSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
   TextRecognizer get textRecognizer =>
       _textRecognizer ??= TextRecognizer(script: TextRecognitionScript.latin);
   BarcodeScanner get barcodeScanner =>
@@ -41,8 +46,9 @@ class SlipScannerService {
       }
     }
 
-    final RecognizedText recognizedText =
-        await textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText = await textRecognizer.processImage(
+      inputImage,
+    );
     final String fullText = recognizedText.text;
 
     return SlipData(
@@ -120,15 +126,15 @@ class SlipScannerService {
 
   // ─── Amount Extraction ───────────────────────────────────────────────────
 
-  bool _isYearLike(int v) => v >= 1900 && v <= 2600;
-
   double? _extractAmount(String text) {
     // Amount with exactly 2 decimal places: 1,234.56 or 1234.56
-    final decimalRx = RegExp(r'(\d{1,3}(?:,\d{3})*\.\d{2})');
+    final decimalRx = RegExp(
+      r'(?<![\d.,])(\d{1,3}(?:,\d{3})+\.\d{2}|\d+\.\d{2})(?![\d.,])',
+    );
     // Thousands-separated integer with no trailing decimal: 1,000
     final thousandsRx = RegExp(r'(\d{1,3}(?:,\d{3})+)');
     // Standalone 2–7 digit integer
-    final intRx = RegExp(r'(?<!\d)(\d{2,7})(?!\d)');
+    final intRx = RegExp(r'(?<![\d./:-])(\d{1,7})(?![\d./:-])');
 
     final keywordRx = RegExp(
       r'Amount|Total|Net|Payment|ยอดเงิน|เงินโอน|ยอดโอน|ยอดรวม|ยอดชำระ|ยอดสุทธิ|จำนวนเงิน|จำนวน',
@@ -174,16 +180,28 @@ class SlipScannerService {
       if (v != null && v > 0) return v;
     }
 
-    // Tier 4: standalone integer, excluding year-like values
-    for (final m in intRx.allMatches(text)) {
-      final v = int.tryParse(m.group(1)!);
-      if (v != null && v > 0 && !_isYearLike(v)) return v.toDouble();
+    // Integer amounts need an explicit amount label to avoid dates/IDs.
+    for (int i = 0; i < lines.length; i++) {
+      if (!keywordRx.hasMatch(lines[i])) continue;
+      final candidates = [lines[i], if (i + 1 < lines.length) lines[i + 1]];
+      for (final line in candidates) {
+        final match = intRx.firstMatch(line);
+        final value = int.tryParse(match?.group(1) ?? '');
+        if (value != null && value > 0) return value.toDouble();
+      }
     }
 
     return null;
   }
 
   // ─── Date Extraction ─────────────────────────────────────────────────────
+
+  DateTime? _validDate(int year, int month, int day) {
+    final date = DateTime(year, month, day);
+    return date.year == year && date.month == month && date.day == day
+        ? date
+        : null;
+  }
 
   DateTime? _extractDate(String text) {
     // Pattern 1: ISO — yyyy-MM-dd or yyyy/MM/dd (TTB and some API-generated slips)
@@ -196,7 +214,7 @@ class SlipScannerService {
       if (y > 2500) y -= 543;
       if (m != null && d != null && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
         try {
-          return DateTime(y, m, d);
+          return _validDate(y, m, d);
         } catch (_) {}
       }
     }
@@ -210,7 +228,7 @@ class SlipScannerService {
       int y = int.tryParse(dmyMatch.group(3)!) ?? 0;
       if (y < 100) {
         if (y >= 50) {
-          y += 1457; // Thai BE two-digit year (e.g. 69 -> BE 2569 -> 2026 CE)
+          y += 1957; // Thai BE two-digit year (e.g. 69 -> BE 2569 -> 2026 CE)
         } else {
           y += 2000; // CE two-digit year (e.g. 26 -> 2026 CE)
         }
@@ -218,14 +236,14 @@ class SlipScannerService {
       if (y > 2500) y -= 543;
       if (d != null && m != null && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
         try {
-          return DateTime(y, m, d);
+          return _validDate(y, m, d);
         } catch (_) {}
       }
     }
 
     // Pattern 3: long format — "10 May 2025", "10 พ.ค. 2568", "29 พ.ค. 69" (UOB, CIMB, some KBank)
     final longRx = RegExp(
-      r'(\d{1,2})\s+([ก-ฮa-zA-Z][ก-ฮa-zA-Z.]{1,10})\s+(\d{2,4})',
+      r'(\d{1,2})\s+([ก-๙a-zA-Z][ก-๙a-zA-Z.]{1,15})\s+(\d{2,4})',
     );
     final longMatch = longRx.firstMatch(text);
     if (longMatch != null) {
@@ -234,7 +252,7 @@ class SlipScannerService {
       int y = int.tryParse(longMatch.group(3)!) ?? 0;
       if (y < 100) {
         if (y >= 50) {
-          y += 1457; // Thai BE two-digit year (e.g. 69 -> BE 2569 -> 2026 CE)
+          y += 1957; // Thai BE two-digit year (e.g. 69 -> BE 2569 -> 2026 CE)
         } else {
           y += 2000; // CE two-digit year (e.g. 26 -> 2026 CE)
         }
@@ -243,7 +261,7 @@ class SlipScannerService {
       final m = _parseThaiMonth(monthStr) ?? _parseEnglishMonth(monthStr);
       if (d != null && m != null) {
         try {
-          return DateTime(y, m, d);
+          return _validDate(y, m, d);
         } catch (_) {}
       }
     }
@@ -259,18 +277,59 @@ class SlipScannerService {
 
     // Filter out obviously non-name lines
     final avoidKeywords = [
-      'สำเร็จ', 'successful', 'success',
-      'บาท', 'baht',
-      'fee', 'ค่าธรรมเนียม',
-      'เลขที่', 'รายการ', 'อ้างอิง', 'ref',
-      'จำนวน', 'ยอดเงิน', 'เงินโอน', 'ยอดโอน', 'total', 'amount',
-      'วันที่', 'เวลา', 'date', 'time',
-      'ธนาคาร', 'ธ.', 'bank', 'กสิกร', 'กรุงไทย', 'กรุงเทพ', 'ไทยพาณิชย์', 'ทหารไทย',
-      'ttb', 'kbank', 'scb', 'bbl', 'krungthai', 'uob', 'cimb', 'gsb', 'bay', 'กรุงศรี',
-      'พร้อมเพย์', 'promptpay',
-      'จาก', 'ไปยัง', 'to', 'from',
-      'บัญชี', 'account', 'no.',
-      'โอน', 'transfer', 'payment', 'make by', 'make'
+      'สำเร็จ',
+      'successful',
+      'success',
+      'บาท',
+      'baht',
+      'fee',
+      'ค่าธรรมเนียม',
+      'เลขที่',
+      'รายการ',
+      'อ้างอิง',
+      'ref',
+      'จำนวน',
+      'ยอดเงิน',
+      'เงินโอน',
+      'ยอดโอน',
+      'total',
+      'amount',
+      'วันที่',
+      'เวลา',
+      'date',
+      'time',
+      'ธนาคาร',
+      'ธ.',
+      'bank',
+      'กสิกร',
+      'กรุงไทย',
+      'กรุงเทพ',
+      'ไทยพาณิชย์',
+      'ทหารไทย',
+      'ttb',
+      'kbank',
+      'scb',
+      'bbl',
+      'krungthai',
+      'uob',
+      'cimb',
+      'gsb',
+      'bay',
+      'กรุงศรี',
+      'พร้อมเพย์',
+      'promptpay',
+      'จาก',
+      'ไปยัง',
+      'to',
+      'from',
+      'บัญชี',
+      'account',
+      'no.',
+      'โอน',
+      'transfer',
+      'payment',
+      'make by',
+      'make',
     ];
 
     final dateMonthRx = RegExp(
