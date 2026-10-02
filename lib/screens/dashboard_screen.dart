@@ -1,3 +1,4 @@
+import '../widgets/auth_status.dart';
 import '../widgets/transaction_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -59,6 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            AuthStatus(settings: widget.settings, data: widget.data),
             FinanceSaveStatus(data: widget.data, settings: widget.settings),
             Expanded(
               child: IndexedStack(

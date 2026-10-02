@@ -12,6 +12,13 @@ Visual context: [DESIGN.md](DESIGN.md). Scope: the finance and slip bug fixes fr
 | Rewards | FinanceData + PetData.syncIncomeRewards | One coin per cumulative 100 THB, calculated in cents; delete and Undo reconcile; already-spent reversals offset future rewards | finance_data_test.dart |
 | Scanning | SlipScannerService | Enabled on Android/iOS only; picker and OCR errors handled; check widget lifecycle after awaits | slip_scanner_test.dart (parser only) |
 
-Finance snapshot writes are serialized and versioned. Rewards reconcile after finance persistence and again at startup so interrupted updates do not duplicate awards. Unreadable finance snapshots stop startup rather than overwrite stored data. Existing pet coins remain a legacy balance because historical finance data was not stored by prior versions.
+Finance snapshot writes are serialized and versioned. Production defaults to memory-only guest storage; authenticated sessions use Supabase. The user request for optional login and non-persistent guest data supersedes the previous local-storage behavior. See [backend/data contract](docs/SUPABASE_SETUP.md).
 
-Storage uses the existing shared_preferences dependency; this is local persistence, not backup, encryption, or a cross-device database. Native disk durability and kill/relaunch still require device validation. Native camera permission and OCR image accuracy are not proven by widget or parser tests.
+| Capability | Canonical owner | Behavior | Evidence |
+|---|---|---|---|
+| Identity | SessionApp + AuthScope | Reset navigator/models on identity changes; block account UI until load succeeds; retry failed load | session_app.dart |
+| Sign in | AuthStatus | Optional email confirmation link; Thai/English; field validation, pending, inline failure and guest exit; explain replacement of guest data | auth_status_test.dart |
+| Storage | FinanceStore | Guest performs no personal-data disk/network writes; authenticated requests bind to user ID; RLS enforced server-side | guest_mode_test.dart, supabase_finance_store_test.dart, SQL migration |
+| Conflict | FinanceSaveStatus | Refuse stale revision; explicit confirmation before replacing unsaved edits with cloud data | save_finance_state RPC |
+
+Legacy on-device personal values are ignored and retained untouched. Language preference and authenticated session restoration are separate from finance persistence. Pet state is session-only. Native OCR accuracy, email delivery and deployed RLS require integration validation.

@@ -19,7 +19,23 @@ class PetData extends ChangeNotifier {
   PetData._internal();
 
   @visibleForTesting
-  PetData.detached();
+  PetData.detached({this.persistent = false});
+
+  bool persistent = false;
+
+  void resetSession() {
+    persistent = false;
+    _loaded = false;
+    _breedId = null;
+    _dogName = "";
+    _coins = 0;
+    _incomeRewards = 0;
+    _hungerStored = maxHunger;
+    _lastUpdate = DateTime.now();
+    _owned.clear();
+    _equipped.clear();
+    notifyListeners();
+  }
 
   static const _prefsKey = 'pet_state';
 
@@ -72,6 +88,10 @@ class PetData extends ChangeNotifier {
 
   Future<void> load() async {
     if (_loaded) return;
+    if (!persistent) {
+      _loaded = true;
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefsKey);
     if (raw != null) {
@@ -102,6 +122,7 @@ class PetData extends ChangeNotifier {
   }
 
   Future<void> _persist() async {
+    if (!persistent) return;
     final prefs = await SharedPreferences.getInstance();
     final saved = await prefs.setString(
       _prefsKey,

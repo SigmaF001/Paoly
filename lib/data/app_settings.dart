@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppSettings extends ChangeNotifier {
+  AppSettings({this.persistent = false});
+  final bool persistent;
   static const _keyUserName = 'user_name';
   static const _keyLang = 'lang_code';
   static const _keyOnboarded = 'onboarded';
@@ -17,16 +19,16 @@ class AppSettings extends ChangeNotifier {
 
   Future<void> load() async {
     _prefs = await SharedPreferences.getInstance();
-    _userName = _prefs.getString(_keyUserName) ?? '';
+    _userName = persistent ? (_prefs.getString(_keyUserName) ?? '') : '';
     _langCode = _prefs.getString(_keyLang) ?? 'th';
-    _onboarded = _prefs.getBool(_keyOnboarded) ?? false;
+    _onboarded = persistent ? (_prefs.getBool(_keyOnboarded) ?? false) : false;
   }
 
   Future<void> completeOnboarding(String name) async {
     _userName = name.trim();
     _onboarded = true;
-    await _prefs.setString(_keyUserName, _userName);
-    await _prefs.setBool(_keyOnboarded, true);
+    if (persistent) await _prefs.setString(_keyUserName, _userName);
+    if (persistent) await _prefs.setBool(_keyOnboarded, true);
     notifyListeners();
   }
 
@@ -38,7 +40,7 @@ class AppSettings extends ChangeNotifier {
 
   Future<void> updateUserName(String name) async {
     _userName = name.trim();
-    await _prefs.setString(_keyUserName, _userName);
+    if (persistent) await _prefs.setString(_keyUserName, _userName);
     notifyListeners();
   }
 }

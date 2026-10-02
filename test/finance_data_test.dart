@@ -1,3 +1,4 @@
+import 'package:paoly/services/finance_store.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,8 +15,8 @@ void main() {
   late PetData pet;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    pet = PetData.detached();
-    data = FinanceData(pet: pet);
+    pet = PetData.detached(persistent: true);
+    data = FinanceData(store: LocalFinanceStore(), pet: pet);
     await data.load();
     data.seedDefaultAccount();
     await data.flush();
@@ -58,7 +59,10 @@ void main() {
         tx('expense', 125.50, expense: true, categoryId: 'custom'),
       );
       await data.flush();
-      final restored = FinanceData(pet: PetData.detached());
+      final restored = FinanceData(
+        store: LocalFinanceStore(),
+        pet: PetData.detached(persistent: true),
+      );
       await restored.load();
       expect(restored.totalBalance, 374.50);
       expect(restored.transactions.single.amount, 125.50);
@@ -75,8 +79,11 @@ void main() {
         data.addTransaction(tx('$i', 10));
       }
       await data.flush();
-      final restoredPet = PetData.detached();
-      final restored = FinanceData(pet: restoredPet);
+      final restoredPet = PetData.detached(persistent: true);
+      final restored = FinanceData(
+        store: LocalFinanceStore(),
+        pet: restoredPet,
+      );
       await restored.load();
       expect(restored.transactions.length, 20);
       expect(restored.totalBalance, 200);
@@ -205,7 +212,10 @@ void main() {
     () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(FinanceData.storageKey, '{broken');
-      final restored = FinanceData(pet: PetData.detached());
+      final restored = FinanceData(
+        store: LocalFinanceStore(),
+        pet: PetData.detached(persistent: true),
+      );
       await expectLater(restored.load(), throwsFormatException);
       expect(prefs.getString(FinanceData.storageKey), '{broken');
       restored.dispose();
@@ -221,8 +231,8 @@ void main() {
     stalePet['coins'] = 0;
     stalePet['incomeRewards'] = 0;
     await prefs.setString('pet_state', jsonEncode(stalePet));
-    final restoredPet = PetData.detached();
-    final restored = FinanceData(pet: restoredPet);
+    final restoredPet = PetData.detached(persistent: true);
+    final restored = FinanceData(store: LocalFinanceStore(), pet: restoredPet);
     await restored.load();
     expect(restoredPet.coins, 1);
     restored.dispose();

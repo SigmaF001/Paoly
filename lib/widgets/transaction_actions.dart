@@ -1,3 +1,4 @@
+import '../services/finance_store.dart';
 import 'package:flutter/material.dart';
 import '../data/app_settings.dart';
 import '../data/finance_data.dart';
@@ -76,9 +77,14 @@ class FinanceSaveStatus extends StatelessWidget {
     builder: (context, _) {
       if (data.saveError == null) return const SizedBox.shrink();
       final th = settings.langCode == 'th';
+      final conflict = data.saveError is FinanceConflict;
       return MaterialBanner(
         content: Text(
-          th
+          conflict
+              ? (th
+                    ? 'มีข้อมูลใหม่จากอุปกรณ์อื่น โหลดข้อมูลล่าสุดก่อนแก้ไขต่อ'
+                    : 'Another device saved newer data. Load it before continuing.')
+              : th
               ? 'ยังบันทึกข้อมูลไม่สำเร็จ กรุณาลองอีกครั้งก่อนปิดแอพ'
               : 'Changes have not been saved. Retry before closing the app.',
         ),
@@ -86,12 +92,44 @@ class FinanceSaveStatus extends StatelessWidget {
           TextButton(
             onPressed: () async {
               try {
-                await data.retrySave();
+                if (conflict) {
+                  final discard = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: Text(
+                        th ? 'โหลดข้อมูลล่าสุด?' : 'Load latest data?',
+                      ),
+                      content: Text(
+                        th
+                            ? 'การเปลี่ยนแปลงที่ยังไม่บันทึกในหน้านี้จะถูกแทนที่ด้วยข้อมูลในบัญชี'
+                            : 'Unsaved changes here will be replaced by the data in your account.',
+                      ),
+                      actions: [
+                        TextButton(
+                          autofocus: true,
+                          onPressed: () => Navigator.pop(dialogContext, false),
+                          child: Text(th ? 'ยกเลิก' : 'Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, true),
+                          child: Text(th ? 'โหลดข้อมูลล่าสุด' : 'Load latest'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (discard == true) await data.reloadFromCloud();
+                } else {
+                  await data.retrySave();
+                }
               } catch (_) {
                 /* Banner stays visible. */
               }
             },
-            child: Text(th ? 'ลองอีกครั้ง' : 'Retry'),
+            child: Text(
+              conflict
+                  ? (th ? 'โหลดข้อมูลล่าสุด' : 'Load latest')
+                  : (th ? 'ลองอีกครั้ง' : 'Retry'),
+            ),
           ),
         ],
       );

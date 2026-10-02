@@ -13,7 +13,7 @@ void main() {
       'lang_code': 'th',
     });
 
-    final settings = AppSettings();
+    final settings = AppSettings(persistent: true);
     await settings.load();
 
     final data = FinanceData();
@@ -42,7 +42,7 @@ void main() {
       'lang_code': 'en',
     });
 
-    final settings = AppSettings();
+    final settings = AppSettings(persistent: true);
     await settings.load();
     final data = FinanceData();
     await data.load();

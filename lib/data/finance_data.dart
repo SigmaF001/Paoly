@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/finance_store.dart';
 import 'package:flutter/foundation.dart';
 import '../models/account.dart';
 import '../models/category.dart';
@@ -98,16 +98,21 @@ const List<TxCategory> _defaultCategories = [
 ];
 
 class FinanceData extends ChangeNotifier {
-  FinanceData({PetData? pet}) : _pet = pet ?? PetData.instance;
+  FinanceData({PetData? pet, FinanceStore? store})
+    : _pet = pet ?? PetData.instance,
+      _store = store ?? GuestFinanceStore();
+  final FinanceStore _store;
   final PetData _pet;
   static const storageKey = 'finance_state_v1';
   Future<void> _writes = Future.value();
   Object? saveError;
   bool _disposed = false;
+  int _pendingWrites = 0;
+  bool get isSaving => _pendingWrites > 0;
 
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(storageKey);
+    final raw = await _store.read();
+    if (_disposed) return;
     if (raw != null) {
       // Parse the entire snapshot first. Never overwrite unreadable data.
       final m = jsonDecode(raw) as Map<String, dynamic>;
@@ -148,8 +153,9 @@ class FinanceData extends ChangeNotifier {
       }
     }
     await _pet.load();
+    if (_disposed) return;
     await _pet.syncIncomeRewards(_incomeRewards);
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   // Calculate from cents so splitting income cannot create extra rewards.
@@ -160,6 +166,8 @@ class FinanceData extends ChangeNotifier {
       10000;
 
   void _changed() {
+    if (_disposed) return;
+    _pendingWrites++;
     final snapshot = jsonEncode({
       'version': 1,
       'accounts': accounts.map((a) => a.toJson()).toList(),
@@ -169,16 +177,15 @@ class FinanceData extends ChangeNotifier {
     final rewards = _incomeRewards;
     _writes = _writes.then((_) async {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        if (!await prefs.setString(storageKey, snapshot)) {
-          throw StateError('Financial data could not be saved');
-        }
+        if (_disposed) return;
+        await _store.write(snapshot);
         // Reconcile only after finance is saved. Startup retries if interrupted.
-        await _pet.syncIncomeRewards(rewards);
+        if (!_disposed) await _pet.syncIncomeRewards(rewards);
         saveError = null;
       } catch (error) {
         saveError = error;
       }
+      _pendingWrites--;
       if (!_disposed) notifyListeners();
     });
     notifyListeners();
@@ -191,6 +198,13 @@ class FinanceData extends ChangeNotifier {
     }
   }
 
+  Future<void> reloadFromCloud() async {
+    await _writes;
+    await load();
+    saveError = null;
+    notifyListeners();
+  }
+
   Future<void> retrySave() {
     _changed();
     return flush();
@@ -198,6 +212,7 @@ class FinanceData extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
     super.dispose();
   }

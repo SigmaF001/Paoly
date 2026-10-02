@@ -57,7 +57,7 @@ Finance cards commonly use 14-pixel corners. Transaction sheets use 24-pixel top
 
 ## Components
 
-`lib/widgets/transaction_actions.dart` owns shared deletion confirmation, Undo and persistence-error feedback. `AddTransactionSheet` owns entry validation and the localized Material date picker. Both finance list screens use the same deletion flow. See `UX-CONTRACT.md` for behavior.
+`lib/widgets/transaction_actions.dart` owns shared deletion confirmation, Undo and persistence-error feedback. `AddTransactionSheet` owns entry validation and the localized Material date picker. Both finance list screens use the same deletion flow. `AuthStatus` owns the optional account status and email-link dialog; it uses the same purple Material controls, scrollable dialogs and Thai/English copy. `SessionApp` owns account loading/retry and resets navigation on identity changes. See `UX-CONTRACT.md` for behavior.
 
 ## Do's and Don'ts
 
