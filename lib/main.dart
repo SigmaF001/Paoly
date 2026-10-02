@@ -61,11 +61,8 @@ class _PaolyAppState extends State<PaolyApp> {
     _theme = AppTheme.theme;
     widget.settings.addListener(_onSettingsChanged);
 
-    // Defer orientation locking to ensure engine is ready
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    });
+    // Do not lock orientation: the app adapts its layout for phones, tablets,
+    // and desktop windows in either orientation.
   }
 
   @override

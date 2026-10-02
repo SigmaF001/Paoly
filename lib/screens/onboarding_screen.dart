@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
+import '../widgets/responsive_layout.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppSettings settings;
@@ -40,121 +41,123 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
+          padding: ResponsiveLayout.pagePadding(context),
+          child: ResponsiveLayout.constrain(
+            Column(
+              children: [
+                const SizedBox(height: 60),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text('💜', style: TextStyle(fontSize: 36)),
+                  ),
                 ),
-                child: const Center(
-                  child: Text('💜', style: TextStyle(fontSize: 36)),
+                const SizedBox(height: 32),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    strings.onboardingQuestion,
+                    style: GoogleFonts.notoSansThai(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  strings.onboardingQuestion,
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    widget.settings.langCode == 'th'
+                        ? 'ใส่ชื่อของคุณเพื่อเริ่มต้นใช้งาน'
+                        : 'Enter your name to get started',
+                    style: GoogleFonts.notoSansThai(
+                      fontSize: 14,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: _nameController,
+                  autofocus: false, // Prevent immediate jank on startup
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _onConfirm(),
                   style: GoogleFonts.notoSansThai(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                     color: AppColors.textDark,
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.settings.langCode == 'th'
-                      ? 'ใส่ชื่อของคุณเพื่อเริ่มต้นใช้งาน'
-                      : 'Enter your name to get started',
-                  style: GoogleFonts.notoSansThai(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              TextField(
-                controller: _nameController,
-                autofocus: false, // Prevent immediate jank on startup
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _onConfirm(),
-                style: GoogleFonts.notoSansThai(
-                  fontSize: 16,
-                  color: AppColors.textDark,
-                ),
-                decoration: InputDecoration(
-                  hintText: strings.onboardingHint,
-                  hintStyle: GoogleFonts.notoSansThai(
-                    fontSize: 16,
-                    color: AppColors.textMuted,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
+                  decoration: InputDecoration(
+                    hintText: strings.onboardingHint,
+                    hintStyle: GoogleFonts.notoSansThai(
+                      fontSize: 16,
+                      color: AppColors.textMuted,
                     ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _loading ? null : _onConfirm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.primary.withAlpha(120),
-                    shape: RoundedRectangleBorder(
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
-                    elevation: 0,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                   ),
-                  child: _loading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          strings.onboardingConfirm,
-                          style: GoogleFonts.notoSansThai(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
                 ),
-              ),
-              const SizedBox(height: 60),
-            ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.primary.withAlpha(120),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            strings.onboardingConfirm,
+                            style: GoogleFonts.notoSansThai(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 60),
+              ],
+            ),
           ),
         ),
       ),

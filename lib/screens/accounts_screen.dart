@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
 import '../utils/sounds.dart';
 import '../widgets/emoji_picker_grid.dart';
+import '../widgets/responsive_layout.dart';
 
 const List<String> _accountEmojis = [
   '🏦',
@@ -46,27 +47,29 @@ class AccountsScreen extends StatelessWidget {
       builder: (context, _) {
         final strings = AppStrings.of(settings.langCode);
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                strings.accountsTitle,
-                style: GoogleFonts.notoSansThai(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+          padding: ResponsiveLayout.pagePadding(context),
+          child: ResponsiveLayout.constrain(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  strings.accountsTitle,
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _totalCard(strings),
-              const SizedBox(height: 20),
-              ...data.accounts.map((a) => _accountCard(a, context, strings)),
-              const SizedBox(height: 8),
-              _addAccountButton(context, strings),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+                _totalCard(strings),
+                const SizedBox(height: 20),
+                ...data.accounts.map((a) => _accountCard(a, context, strings)),
+                const SizedBox(height: 8),
+                _addAccountButton(context, strings),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         );
       },
@@ -151,12 +154,18 @@ class AccountsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                formatCurrency(a.balance),
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    formatCurrency(a.balance),
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

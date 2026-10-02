@@ -8,6 +8,7 @@ import '../models/transaction.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
 import '../widgets/year_month_selector.dart';
+import '../widgets/responsive_layout.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final FinanceData data;
@@ -54,7 +55,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
               child: Text(
                 strings.allTransactions,
                 style: GoogleFonts.notoSansThai(
@@ -66,7 +67,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
             const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: ResponsiveLayout.pagePadding(context),
               child: YearMonthSelector(
                 data: widget.data,
                 settings: widget.settings,
@@ -74,15 +75,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
             const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _filterChip(strings.filterAll, 0),
-                  const SizedBox(width: 8),
-                  _filterChip(strings.filterIncome, 1),
-                  const SizedBox(width: 8),
-                  _filterChip(strings.filterExpense, 2),
-                ],
+              padding: ResponsiveLayout.pagePadding(context),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _filterChip(strings.filterAll, 0),
+                    const SizedBox(width: 8),
+                    _filterChip(strings.filterIncome, 1),
+                    const SizedBox(width: 8),
+                    _filterChip(strings.filterExpense, 2),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -105,7 +109,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: ResponsiveLayout.pagePadding(context),
                       itemCount: list.length,
                       itemBuilder: (_, i) => _dismissibleItem(list[i], strings),
                     ),

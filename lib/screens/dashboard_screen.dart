@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
 import '../widgets/add_transaction_sheet.dart';
 import '../widgets/year_month_selector.dart';
+import '../widgets/responsive_layout.dart';
 import 'accounts_screen.dart';
 import 'pet_screen.dart';
 import 'reports_screen.dart';
@@ -78,14 +79,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            _buildBottomNav(),
+            _buildBottomNav(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(BuildContext context) {
     final strings = AppStrings.of(widget.settings.langCode);
     final items = [
       {'icon': '🏠', 'label': strings.navHome},
@@ -96,6 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'icon': '🐶', 'label': 'น้องหมา'},
     ];
 
+    final showLabels = MediaQuery.sizeOf(context).width >= 380;
     return Container(
       height: 80,
       decoration: BoxDecoration(
@@ -110,36 +112,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: items.asMap().entries.map((entry) {
           final i = entry.key;
           final item = entry.value;
 
           if (item == null) {
-            return GestureDetector(
-              onTap: () => _onNavTap(i),
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withAlpha(100),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+            return Expanded(
+              child: Center(
+                child: GestureDetector(
+                  onTap: () => _onNavTap(i),
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withAlpha(100),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    '+',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1,
+                    child: const Center(
+                      child: Text(
+                        '+',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          height: 1,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -148,36 +153,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           final selected = i == _selectedNavIndex;
-          return GestureDetector(
-            onTap: () => _onNavTap(i),
-            child: Container(
-              width: 60,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: selected
-                  ? BoxDecoration(
-                      color: AppColors.lightPurple,
-                      borderRadius: BorderRadius.circular(14),
-                    )
-                  : null,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    item['icon'] as String,
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item['label'] as String,
-                    style: GoogleFonts.notoSansThai(
-                      fontSize: 10,
-                      fontWeight: selected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                      color: selected ? AppColors.primary : AppColors.textMuted,
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => _onNavTap(i),
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 44),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: selected
+                    ? BoxDecoration(
+                        color: AppColors.lightPurple,
+                        borderRadius: BorderRadius.circular(14),
+                      )
+                    : null,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      item['icon'] as String,
+                      style: const TextStyle(fontSize: 20),
                     ),
-                  ),
-                ],
+                    if (showLabels) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.notoSansThai(
+                          fontSize: 10,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           );
@@ -218,36 +231,38 @@ class _HomeTabState extends State<_HomeTab> {
       builder: (context, _) {
         final strings = AppStrings.of(widget.settings.langCode);
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-              _buildHeader(context, strings),
-              const SizedBox(height: 16),
-              YearMonthSelector(data: widget.data, settings: widget.settings),
-              const SizedBox(height: 16),
-              _buildBalanceCard(strings),
-              const SizedBox(height: 24),
-              _buildSectionHeader(
-                strings.myAccounts,
-                onViewAll: () => widget.onNavigate(4),
-                strings: strings,
-              ),
-              const SizedBox(height: 12),
-              _buildAccounts(),
-              const SizedBox(height: 24),
-              _buildSectionHeader(
-                strings.recentTx,
-                onViewAll: () => widget.onNavigate(1),
-                strings: strings,
-              ),
-              const SizedBox(height: 12),
-              ...widget.data.transactions
-                  .take(4)
-                  .map((t) => _dismissibleTransactionItem(t, strings)),
-              const SizedBox(height: 8),
-            ],
+          padding: ResponsiveLayout.pagePadding(context),
+          child: ResponsiveLayout.constrain(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+                _buildHeader(context, strings),
+                const SizedBox(height: 16),
+                YearMonthSelector(data: widget.data, settings: widget.settings),
+                const SizedBox(height: 16),
+                _buildBalanceCard(strings),
+                const SizedBox(height: 24),
+                _buildSectionHeader(
+                  strings.myAccounts,
+                  onViewAll: () => widget.onNavigate(4),
+                  strings: strings,
+                ),
+                const SizedBox(height: 12),
+                _buildAccounts(),
+                const SizedBox(height: 24),
+                _buildSectionHeader(
+                  strings.recentTx,
+                  onViewAll: () => widget.onNavigate(1),
+                  strings: strings,
+                ),
+                const SizedBox(height: 12),
+                ...widget.data.transactions
+                    .take(4)
+                    .map((t) => _dismissibleTransactionItem(t, strings)),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },
@@ -259,26 +274,32 @@ class _HomeTabState extends State<_HomeTab> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              strings.greeting(widget.settings.userName),
-              style: GoogleFonts.notoSansThai(
-                fontSize: 13,
-                color: AppColors.textMuted,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.greeting(widget.settings.userName),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.notoSansThai(
+                  fontSize: 13,
+                  color: AppColors.textMuted,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              strings.homeTitle,
-              style: GoogleFonts.notoSansThai(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+              const SizedBox(height: 2),
+              Text(
+                strings.homeTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.notoSansThai(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         Row(
           children: [
@@ -392,15 +413,19 @@ class _HomeTabState extends State<_HomeTab> {
               ),
               const SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _balanceSubCard(
-                    strings.incomeLabel,
-                    formatCurrency(widget.data.monthlyIncome),
+                  Expanded(
+                    child: _balanceSubCard(
+                      strings.incomeLabel,
+                      formatCurrency(widget.data.monthlyIncome),
+                    ),
                   ),
-                  _balanceSubCard(
-                    strings.expenseLabel,
-                    formatCurrency(widget.data.monthlyExpense),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _balanceSubCard(
+                      strings.expenseLabel,
+                      formatCurrency(widget.data.monthlyExpense),
+                    ),
                   ),
                 ],
               ),
@@ -413,7 +438,6 @@ class _HomeTabState extends State<_HomeTab> {
 
   Widget _balanceSubCard(String label, String amount) {
     return Container(
-      width: 145,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.primaryDark,
@@ -451,14 +475,19 @@ class _HomeTabState extends State<_HomeTab> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: GoogleFonts.notoSansThai(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.notoSansThai(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
           ),
         ),
+        const SizedBox(width: 12),
         GestureDetector(
           onTap: onViewAll,
           child: Text(
@@ -475,51 +504,57 @@ class _HomeTabState extends State<_HomeTab> {
 
   Widget _buildAccounts() {
     final accounts = widget.data.accounts;
-    return Row(
-      children: List.generate(accounts.length, (i) {
-        final a = accounts[i];
-        return Expanded(
-          child: Container(
-            height: 80,
-            margin: EdgeInsets.only(right: i < accounts.length - 1 ? 8 : 0),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [_cardShadow],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(a.icon, style: const TextStyle(fontSize: 20)),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      a.name,
-                      style: GoogleFonts.notoSansThai(
-                        fontSize: 10,
-                        color: AppColors.textMuted,
+    return SizedBox(
+      height: 80,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: accounts.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final a = accounts[i];
+          return SizedBox(
+            width: 150,
+            child: Container(
+              height: 80,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [_cardShadow],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(a.icon, style: const TextStyle(fontSize: 20)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        a.name,
+                        style: GoogleFonts.notoSansThai(
+                          fontSize: 10,
+                          color: AppColors.textMuted,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      formatCurrency(a.balance),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
+                      Text(
+                        formatCurrency(a.balance),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 

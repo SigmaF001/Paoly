@@ -7,6 +7,7 @@ import '../models/dog_breed.dart';
 import '../models/pet_items.dart';
 import '../theme/app_theme.dart';
 import '../widgets/dog_view.dart';
+import '../widgets/responsive_layout.dart';
 
 /// Entry point for the dog-raising feature. Shows breed selection on the
 /// first visit, then the pet home screen.
@@ -55,157 +56,170 @@ class _BreedSelectionViewState extends State<_BreedSelectionView> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 14),
-            Text(
-              'เลือกน้องหมาของคุณ 🐾',
-              style: GoogleFonts.notoSansThai(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'แตะเพื่อเลือกสายพันธุ์ที่อยากเลี้ยง',
-              style: GoogleFonts.notoSansThai(
-                fontSize: 13,
-                color: AppColors.textMuted,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.only(bottom: 8),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.82,
-                ),
-                itemCount: DogBreed.all.length,
-                itemBuilder: (context, i) {
-                  final breed = DogBreed.all[i];
-                  final selected = breed.id == _selectedId;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedId = breed.id),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color:
-                              selected ? AppColors.primary : AppColors.border,
-                          width: selected ? 2.5 : 1,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x1F7C6FC4),
-                            blurRadius: 12,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: IgnorePointer(
-                              child: DogView(
-                                breed: breed,
-                                mood: DogMood.happy,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10, left: 6, right: 6),
-                            child: Text(
-                              breed.nameTh,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.notoSansThai(
-                                fontSize: 12,
-                                fontWeight: selected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: selected
-                                    ? AppColors.primary
-                                    : AppColors.textDark,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (_selectedId != null) ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _nameController,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _adopt(),
+        padding: ResponsiveLayout.pagePadding(context),
+        child: ResponsiveLayout.constrain(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 14),
+              Text(
+                'เลือกน้องหมาของคุณ 🐾',
                 style: GoogleFonts.notoSansThai(
-                  fontSize: 15,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                   color: AppColors.textDark,
                 ),
-                decoration: InputDecoration(
-                  hintText: 'ตั้งชื่อน้องหมา (ไม่บังคับ)',
-                  hintStyle: GoogleFonts.notoSansThai(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.pets, color: AppColors.primary),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide:
-                        const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'แตะเพื่อเลือกสายพันธุ์ที่อยากเลี้ยง',
+                style: GoogleFonts.notoSansThai(
+                  fontSize: 13,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => GridView.builder(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: constraints.maxWidth >= 520 ? 3 : 2,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.82,
+                    ),
+                    itemCount: DogBreed.all.length,
+                    itemBuilder: (context, i) {
+                      final breed = DogBreed.all[i];
+                      final selected = breed.id == _selectedId;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedId = breed.id),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.primary
+                                  : AppColors.border,
+                              width: selected ? 2.5 : 1,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x1F7C6FC4),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: IgnorePointer(
+                                  child: DogView(
+                                    breed: breed,
+                                    mood: DogMood.happy,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 10,
+                                  left: 6,
+                                  right: 6,
+                                ),
+                                child: Text(
+                                  breed.nameTh,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.notoSansThai(
+                                    fontSize: 12,
+                                    fontWeight: selected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
+                                    color: selected
+                                        ? AppColors.primary
+                                        : AppColors.textDark,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _adopt,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
+              if (_selectedId != null) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _nameController,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _adopt(),
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 15,
+                    color: AppColors.textDark,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'ตั้งชื่อน้องหมา (ไม่บังคับ)',
+                    hintStyle: GoogleFonts.notoSansThai(
+                      fontSize: 14,
+                      color: AppColors.textMuted,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(
+                      Icons.pets,
+                      color: AppColors.primary,
+                    ),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'รับเลี้ยง 🐶',
-                    style: GoogleFonts.notoSansThai(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _adopt,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'รับเลี้ยง 🐶',
+                      style: GoogleFonts.notoSansThai(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
             ],
-            const SizedBox(height: 12),
-          ],
+          ),
         ),
       ),
     );
@@ -267,7 +281,10 @@ class _PetHomeViewState extends State<_PetHomeView> {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text(msg, style: GoogleFonts.notoSansThai(color: Colors.white)),
+          content: Text(
+            msg,
+            style: GoogleFonts.notoSansThai(color: Colors.white),
+          ),
           backgroundColor: AppColors.primaryDark,
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
@@ -284,141 +301,145 @@ class _PetHomeViewState extends State<_PetHomeView> {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            // Header: name + coins
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        padding: ResponsiveLayout.pagePadding(context),
+        child: ResponsiveLayout.constrain(
+          Column(
+            children: [
+              const SizedBox(height: 12),
+              // Header: name + coins
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pet.dogName,
+                          style: GoogleFonts.notoSansThai(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        Text(
+                          breed.nameTh,
+                          style: GoogleFonts.notoSansThai(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _coinChip(pet.coins),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Stage
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFEAF4FF), Color(0xFFEFE9FF)],
+                    ),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Stack(
                     children: [
-                      Text(
-                        pet.dogName,
-                        style: GoogleFonts.notoSansThai(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                      // grass / floor
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 70,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFCDEBC2),
+                            borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(27),
+                            ),
+                          ),
                         ),
                       ),
-                      Text(
-                        breed.nameTh,
-                        style: GoogleFonts.notoSansThai(
-                          fontSize: 12,
-                          color: AppColors.textMuted,
+                      // mood bubble
+                      Positioned(
+                        top: 14,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1F7C6FC4),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              _moodText(mood),
+                              style: GoogleFonts.notoSansThai(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: _moodColor(mood),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // the dog
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
+                        child: DogView(
+                          breed: breed,
+                          mood: mood,
+                          equipped: pet.equipped,
+                          celebrateTick: _celebrate,
+                          onTap: () => _snack('โฮ่ง! 🐶'),
                         ),
                       ),
                     ],
                   ),
                 ),
-                _coinChip(pet.coins),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Stage
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFEAF4FF), Color(0xFFEFE9FF)],
-                  ),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Stack(
-                  children: [
-                    // grass / floor
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 70,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFCDEBC2),
-                          borderRadius: BorderRadius.vertical(
-                            bottom: Radius.circular(27),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // mood bubble
-                    Positioned(
-                      top: 14,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x1F7C6FC4),
-                                blurRadius: 10,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            _moodText(mood),
-                            style: GoogleFonts.notoSansThai(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: _moodColor(mood),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // the dog
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
-                      child: DogView(
-                        breed: breed,
-                        mood: mood,
-                        equipped: pet.equipped,
-                        celebrateTick: _celebrate,
-                        onTap: () => _snack('โฮ่ง! 🐶'),
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            _hungerBar(hunger, mood),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _actionButton(
-                    label: 'ให้อาหาร',
-                    icon: '🍖',
-                    filled: true,
-                    onTap: _openFoodSheet,
+              const SizedBox(height: 14),
+              _hungerBar(hunger, mood),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _actionButton(
+                      label: 'ให้อาหาร',
+                      icon: '🍖',
+                      filled: true,
+                      onTap: _openFoodSheet,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _actionButton(
-                    label: 'แต่งตัว / ร้านค้า',
-                    icon: '🛍️',
-                    filled: false,
-                    onTap: _openShopSheet,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _actionButton(
+                      label: 'แต่งตัว / ร้านค้า',
+                      icon: '🛍️',
+                      filled: false,
+                      onTap: _openShopSheet,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
@@ -575,7 +596,10 @@ class _PetHomeViewState extends State<_PetHomeView> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text(f.emoji, style: const TextStyle(fontSize: 22)),
+                      child: Text(
+                        f.emoji,
+                        style: const TextStyle(fontSize: 22),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -688,7 +712,9 @@ class _PetHomeViewState extends State<_PetHomeView> {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: owned
-                            ? (equipped ? AppColors.primary : AppColors.textMuted)
+                            ? (equipped
+                                  ? AppColors.primary
+                                  : AppColors.textMuted)
                             : const Color(0xFF8A6A12),
                       ),
                     ),
@@ -707,50 +733,59 @@ class _PetHomeViewState extends State<_PetHomeView> {
     return AnimatedBuilder(
       animation: PetData.instance,
       builder: (context, _) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            20 + MediaQuery.of(context).viewPadding.bottom,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: ResponsiveLayout.contentMaxWidth,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                20 + MediaQuery.of(context).viewPadding.bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.notoSansThai(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                    _coinChip(PetData.instance.coins),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.notoSansThai(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        _coinChip(PetData.instance.coins),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    child,
                   ],
                 ),
-                const SizedBox(height: 16),
-                child,
-              ],
+              ),
             ),
           ),
         );

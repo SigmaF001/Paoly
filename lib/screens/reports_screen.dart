@@ -6,6 +6,7 @@ import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatter.dart';
 import '../widgets/year_month_selector.dart';
+import '../widgets/responsive_layout.dart';
 
 class ReportsScreen extends StatelessWidget {
   final FinanceData data;
@@ -52,71 +53,73 @@ class ReportsScreen extends StatelessWidget {
             : (categories.first['total'] as double);
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                strings.reportsTitle,
-                style: GoogleFonts.notoSansThai(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 12),
-              YearMonthSelector(data: data, settings: settings),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _summaryCard(
-                      strings.incomeSummary,
-                      data.monthlyIncome,
-                      AppColors.income,
-                      '↑',
-                    ),
+          padding: ResponsiveLayout.pagePadding(context),
+          child: ResponsiveLayout.constrain(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  strings.reportsTitle,
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _summaryCard(
-                      strings.expenseSummary,
-                      data.monthlyExpense,
-                      AppColors.expense,
-                      '↓',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _netCard(strings),
-              const SizedBox(height: 24),
-              Text(
-                strings.byCategory,
-                style: GoogleFonts.notoSansThai(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
                 ),
-              ),
-              const SizedBox(height: 12),
-              if (categories.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      strings.noExpenses,
-                      style: GoogleFonts.notoSansThai(
-                        color: AppColors.textMuted,
+                const SizedBox(height: 12),
+                YearMonthSelector(data: data, settings: settings),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _summaryCard(
+                        strings.incomeSummary,
+                        data.monthlyIncome,
+                        AppColors.income,
+                        '↑',
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _summaryCard(
+                        strings.expenseSummary,
+                        data.monthlyExpense,
+                        AppColors.expense,
+                        '↓',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _netCard(strings),
+                const SizedBox(height: 24),
+                Text(
+                  strings.byCategory,
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
                   ),
-                )
-              else
-                ...categories.map((cat) => _categoryBar(cat, maxExpense)),
-              const SizedBox(height: 16),
-            ],
+                ),
+                const SizedBox(height: 12),
+                if (categories.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        strings.noExpenses,
+                        style: GoogleFonts.notoSansThai(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ...categories.map((cat) => _categoryBar(cat, maxExpense)),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         );
       },
@@ -143,12 +146,16 @@ class ReportsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            formatCurrency(amount),
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              formatCurrency(amount),
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
             ),
           ),
         ],
@@ -208,29 +215,38 @@ class ReportsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(
-                    cat['icon'] as String,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    cat['name'] as String,
-                    style: GoogleFonts.notoSansThai(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDark,
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      cat['icon'] as String,
+                      style: const TextStyle(fontSize: 18),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cat['name'] as String,
+                        style: GoogleFonts.notoSansThai(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDark,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Text(
-                formatCurrency(total),
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.expense,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  formatCurrency(total),
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.expense,
+                  ),
                 ),
               ),
             ],
